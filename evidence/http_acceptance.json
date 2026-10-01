@@ -1,0 +1,33 @@
+{
+  "checkedAt": "2026-10-01T01:56:31.662826+00:00",
+  "url": "http://127.0.0.1:8765",
+  "backend": "SUMO/TraCI",
+  "sumo": "SUMO 1.25.0",
+  "pauseClockStable": true,
+  "mapSource": "OpenStreetMap",
+  "buildings": 129,
+  "rsus": 4,
+  "simTime": 100.6,
+  "metrics": {
+    "sensed": 260,
+    "completed": 161,
+    "offloaded": 206,
+    "meanLatency": 8.459627329192546,
+    "meanQueueDelay": 5.756564562614477,
+    "signalActions": 9,
+    "signalRejected": 152,
+    "vehicles": 203,
+    "completedTrips": 0,
+    "meanTripTime": null,
+    "haltingVehicles": 23
+  },
+  "observedTaskStatuses": [
+    "done",
+    "processing",
+    "queued",
+    "returning",
+    "transmitting"
+  ],
+  "taskTimeOrderValid": true,
+  "exportReceived": true
+}

@@ -1,0 +1,11 @@
+{
+  "scope": "Read-only review; production backend files were not modified",
+  "runtimeAtInspection": "localhost:8765 refused connection; SUMO server was stopped",
+  "source": "runs/20261001T020237_708870Z/export.json",
+  "lastRun": {"simTime":487.0,"vehicles":409,"tasks":2982,"events":7968,"completed":1002,"unfinished":1980,"queued":1973,"exportMiB":4.735},
+  "snapshot": {"returnedTasks":100,"returnedEvents":60,"historyOnlyPayloadKB":56.7,"fixture120SecondsFullPayloadKB":101.4},
+  "offlineMeasurement": {"samples":30,"snapshotMedianMs":6.84,"snapshotMaxMs":19.79,"jsonEncodingMedianMs":0.83,"parsedExportRetainedMiB":10.2,"parsedExportPeakMiB":22.9},
+  "measurementLimit": "Snapshot benchmark omitted live vehicle/signal reads to isolate history processing. It did not measure live SUMO CPU.",
+  "conclusion": "Historical scanning can be optimized but these measurements do not support attributing severe whole-machine stalls to backend memory. Prioritize front-end rendering.",
+  "futureOptionsNotImplemented": ["lazy snapshot cache", "select bounded task list before building views", "avoid duplicate signal reads"]
+}

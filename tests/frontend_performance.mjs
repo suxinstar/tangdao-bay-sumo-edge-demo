@@ -1,0 +1,42 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+import {pathToFileURL,fileURLToPath} from 'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const threeUrl=pathToFileURL(path.join(root,'web/vendor/three.module.js')).href;
+const THREE=await import(threeUrl);
+const utility=fs.readFileSync(path.join(root,'web/vendor/BufferGeometryUtils.js'),'utf8').replace("from 'three'","from '"+threeUrl+"'");
+const {mergeGeometries}=await import('data:text/javascript;base64,'+Buffer.from(utility).toString('base64'));
+const source=fs.readFileSync(path.join(root,'web/app.js'),'utf8').replace(/^import .*;\r?\n/gm,'').replace(/boot\(\);\s*$/,'');
+const scene=JSON.parse(fs.readFileSync(path.join(root,'data/scene.json'),'utf8'));
+const state=JSON.parse(fs.readFileSync(path.join(root,'verification/backend_120s_state.json'),'utf8'));
+const nodes=new Map();
+function node(){const classes=new Set(),queries=new Map();return{style:{},dataset:{},children:[],clientWidth:942,clientHeight:625,hidden:false,classList:{add:v=>classes.add(v),remove:v=>classes.delete(v),contains:v=>classes.has(v),toggle(v,on){on?classes.add(v):classes.delete(v)}},append(...v){this.children.push(...v)},replaceChildren(...v){this.children=v},querySelector(s){if(!queries.has(s))queries.set(s,node());return queries.get(s)},querySelectorAll(){return Array.from({length:5},node)},addEventListener(){},get offsetWidth(){throw Error('Synchronous label width read')},get offsetHeight(){throw Error('Synchronous label height read')}}}
+const document={hidden:false,activeElement:null,getElementById(id){if(!nodes.has(id))nodes.set(id,node());return nodes.get(id)},createElement:node,createTextNode:s=>s,addEventListener(){}};
+let now=1000,serial=0;const timers=new Map(),rafs=new Map();let disposedGeometries=0;
+const context=vm.createContext({THREE,mergeGeometries,console,document,window:{devicePixelRatio:2,addEventListener(){}},performance:{now:()=>now},setTimeout:(fn,delay)=>{const id=++serial;timers.set(id,{fn,delay});return id},clearTimeout:id=>timers.delete(id),requestAnimationFrame:fn=>{const id=++serial;rafs.set(id,fn);return id},cancelAnimationFrame:id=>rafs.delete(id),AbortController,sceneFixture:scene,stateFixture:state,assert});
+vm.runInContext(source,context);
+const run=code=>vm.runInContext(code,context);
+run("world=new THREE.Scene();world.fog=new THREE.Fog(0xffffff,1900,5500);camera=new THREE.PerspectiveCamera(42,942/625,.8,15000);controls={target:new THREE.Vector3(),update(){camera.lookAt(this.target);camera.updateMatrixWorld()},dispose(){}};renderer={info:{render:{calls:0,triangles:0}},getPixelRatio:()=>QUALITY[quality].dpr,setPixelRatio(){},setSize(){},render(){},dispose(){}};for(const name of ['map','rsu','signals','vehicles','effects']){layers[name]=new THREE.Group();world.add(layers[name])}layers.sun=new THREE.DirectionalLight();world.add(layers.sun);sceneData=sceneFixture;buildMap(sceneData);latest=stateFixture;previous=latest;cacheSnapshot();updateDashboard(latest);");
+const checks=[];function check(name,code){run(code);checks.push(name)}
+check('actual_scene_and_signal_batches',"assert.equal(signalBatch.count,171);assert.equal(signalBatch.lights.count,171);assert.equal(signalBatch.poles.length,0);assert.equal(signalBatch.cases.length,0);assert.equal([...signalObjects.values()].reduce((a,s)=>a+s.heads.size,0),57);");
+check('vehicle_color_and_matrix_upload_cache',"updateCars(1);const v=carParts[0].mesh.instanceMatrix.version,c=carParts[0].mesh.instanceColor.version;updateCars(1);assert.equal(carParts[0].mesh.instanceMatrix.version,v);assert.equal(carParts[0].mesh.instanceColor.version,c);assert.equal(carParts[0].mesh.instanceMatrix.updateRanges[0].count,latest.vehicles.length*16);");
+check('labels_have_no_synchronous_size_reads',"drawLabels();assert.equal(document.getElementById('map-labels').children.length,labels.length+4);");
+check('stage_boundaries',"const t={created:10,txEnd:11,finish:20,returnEnd:21,origin:'a',target:'b'};assert.equal(effectStages(t,9),0);assert.equal(effectStages(t,10),3);assert.equal(effectStages(t,11),1);assert.equal(effectStages(t,12.5),0);assert.equal(effectStages(t,20),4);assert.equal(effectStages(t,21),0);");
+check('bounded_pool_1000_tasks',"viewFrustum.intersectsSphere=()=>true;candidateTasks=Array.from({length:1000},(_,i)=>({id:'stress'+i,created:10,txEnd:11,finish:20,returnEnd:21,origin:'RSU_1',target:'RSU_2',x:500,y:400}));updateEffects(10.5);assert.equal(effects.size,12);assert.equal(layers.effects.children.length,12);assert.equal(performanceStats.effectSkipped,988);");
+check('expired_effects_reused',"const old=new Set(layers.effects.children);updateEffects(15);assert.equal(effects.size,0);assert.equal(effectPool.length,12);updateEffects(20.5);assert.equal(effects.size,12);assert.equal(layers.effects.children.length,12);assert([...layers.effects.children].every(g=>old.has(g)));updateEffects(21);assert.equal(effects.size,0);");
+check('standard_limit_and_reduction_release',"quality='standard';updateEffects(10.5);assert.equal(effects.size,24);let released=0;for(const e of effects.values())e.line.geometry.addEventListener('dispose',()=>released++);for(const e of effects.values())releaseEffect(e);effects.clear();quality='light';trimEffectPool(12);assert.equal(effectPool.length,12);assert.equal(released,12);assert.equal(layers.effects.children.length,12);");
+check('outside_view_creates_no_effects',"viewFrustum.intersectsSphere=()=>false;updateEffects(10.5);assert.equal(effects.size,0);assert.equal(effectPool.length,12);");
+check('repeat_reset_does_not_grow_resources',"for(let i=0;i<50;i++)clearDynamic();assert.equal(effects.size,0);assert.equal(effectPool.length,12);assert.equal(layers.effects.children.length,12);assert.equal(lastEventKey,null);");
+timers.clear();rafs.clear();
+check('paused_render_schedules_no_continuation',"stopFrames();latest.status='paused';labelsDirty=false;cameraMove=null;renderDirty=false;candidateTasks=[];cachedCars=[];renderFrame(1000);");
+assert.equal(timers.size,0);assert.equal(rafs.size,0);checks.push('paused_has_zero_pending_frame_work');
+check('quality_fps_cap',"lastFrameAt=performance.now();requestRender();");
+assert.equal(timers.size,1);assert([...timers.values()][0].delay>=1000/24-.01);checks.push('frame_delay_at_least_41ms');
+check('hidden_cancels_frames_and_poll_guard',"document.hidden=true;visibilityChanged();const p=performanceStats.polls;poll();assert.equal(performanceStats.polls,p);requestRender();");
+assert.equal(timers.size,0);assert.equal(rafs.size,0);checks.push('hidden_has_zero_frame_timers');
+check('dispose_releases_scene_resources',"let count=0;world.traverse(o=>{if(o.geometry)o.geometry.addEventListener('dispose',()=>count++)});disposeScene();assert(count>20);assert.equal(effects.size,0);assert.equal(effectPool.length,0);assert.equal(stopped,true);");
+const report={passed:true,checks:checks.length,details:checks,scope:'Actual frontend functions and Three.js geometry in Node VM; mocked DOM/timers/renderer. Not a GPU or browser benchmark.',fixture:{vehicles:state.vehicles.length,tasks:state.tasks.length,signals:state.signals.length}};
+fs.writeFileSync(path.join(root,'evidence/performance/frontend_checks.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
+

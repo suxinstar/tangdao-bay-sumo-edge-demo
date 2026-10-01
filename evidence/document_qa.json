@@ -1,0 +1,16 @@
+{
+  "document": "唐岛湾北岸Demo系统设计与使用说明_v1.docx",
+  "pages": 7,
+  "canonicalRenderer": "render_docx.py attempted; LibreOffice soffice.exe unavailable",
+  "fallbackRenderer": "Microsoft Word COM ExportAsFixedFormat followed by bundled Poppler pdftoppm",
+  "allFinalPagesVisuallyInspected": true,
+  "checks": {
+    "noBlankPages": true,
+    "noClippingOrOverlappingText": true,
+    "titleBlackWithoutDecorativeBorder": true,
+    "tablesHaveExplicitWidthsAndLightBorders": true,
+    "sourceAndSimulationBoundariesDisclosed": true,
+    "unimplementedResearchWorkIdentified": true
+  },
+  "qaPdfAndPageImagesExcludedFromDeliveryArchive": true
+}

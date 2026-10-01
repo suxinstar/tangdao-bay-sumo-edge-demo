@@ -1,0 +1,46 @@
+[
+  [
+    "C:\\Program Files (x86)\\Eclipse\\Sumo\\bin\\netconvert.EXE",
+    "--osm-files",
+    "data/tangdao.osm.xml",
+    "--output-file",
+    "scenario/tangdao.net.xml",
+    "--geometry.remove",
+    "--junctions.join",
+    "--tls.guess-signals",
+    "--tls.discard-simple",
+    "--tls.join",
+    "--tls.default-type",
+    "static",
+    "--tls.cycle.time",
+    "64",
+    "--tls.yellow.time",
+    "3",
+    "--tls.allred.time",
+    "1",
+    "--keep-edges.by-vclass",
+    "passenger",
+    "--keep-edges.in-geo-boundary",
+    "120.18,35.941,120.21,35.959",
+    "--remove-edges.isolated",
+    "--output.street-names",
+    "--no-turnarounds",
+    "--junctions.join-output",
+    "data/joined-junctions.xml"
+  ],
+  [
+    "C:\\Program Files (x86)\\Eclipse\\Sumo\\bin\\sumo.EXE",
+    "--version"
+  ],
+  [
+    "C:\\Program Files (x86)\\Eclipse\\Sumo\\bin\\sumo.EXE",
+    "-c",
+    "scenario/tangdao.sumocfg",
+    "--summary-output",
+    "data/sumo_summary.xml",
+    "--tripinfo-output",
+    "data/tripinfo.xml",
+    "--collision.action",
+    "warn"
+  ]
+]

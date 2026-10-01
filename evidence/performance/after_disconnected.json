@@ -1,0 +1,14 @@
+{
+  "fixture": "Disconnected QA HTTP state endpoint; standard quality",
+  "metrics": {
+    "seconds": 32.43454700009897,
+    "mainThreadTaskSeconds": 0.2216099999999992,
+    "scriptSeconds": 0.03320500000000015,
+    "mainThreadDutyPercent": 0.6832529524747886,
+    "layouts": 78,
+    "styleRecalculations": 78,
+    "heapMB": 11.156192779541016
+  },
+  "detailsStart": "画质：标准 30 FPS 上限；像素比 1.00；三角形 69,485；累计绘制 1574；状态请求 136；标签更新 137；同步尺寸测量 0；特效池 1，本帧另有 0 项仅显示在事件/指标中。GPU：ANGLE (Intel, Intel(R) UHD Graphics 730 (0x00004682) Direct3D11 vs_5_0 ps_5_0, D3D11)。",
+  "detailsEnd": "画质：标准 30 FPS 上限；像素比 1.00；三角形 69,485；累计绘制 1574；状态请求 136；标签更新 137；同步尺寸测量 0；特效池 1，本帧另有 0 项仅显示在事件/指标中。GPU：ANGLE (Intel, Intel(R) UHD Graphics 730 (0x00004682) Direct3D11 vs_5_0 ps_5_0, D3D11)。"
+}

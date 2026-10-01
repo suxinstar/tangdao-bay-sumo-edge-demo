@@ -1,0 +1,35 @@
+{
+  "checkedAt": "2026-10-01T02:04:02.922Z",
+  "url": "http://127.0.0.1:8765/",
+  "checks": {
+    "webGLSceneVisible": true,
+    "vehiclesBuildingsRsuSignalsVisible": true,
+    "localSchedulerUiOffloadZero": true,
+    "playPauseSpeedControls": true,
+    "resetClearsClockMetricsAndEvents": true,
+    "coverageToggle": true,
+    "rsuFocus": true,
+    "dataBoundaryModal": true,
+    "overviewAllFourRsuVisibleWithoutLabelOverlap": true
+  },
+  "consoleWarningsAndErrors": [],
+  "resetEmptyText": "车辆进入感知区后，事件将在这里出现。",
+  "localStrategyObserved": {
+    "simTime": 88.8,
+    "sensed": 205,
+    "completed": 121,
+    "offloaded": 0,
+    "signalActions": 9
+  },
+  "finalConsoleWarningsAndErrors": [],
+  "finalUiCheckedAt": "2026-10-01T02:08:41.088Z",
+  "verifiedPausedSnapshot": {
+    "simTime": 37.4,
+    "vehicles": 75,
+    "sensed": 32,
+    "completed": 29,
+    "offloaded": 24,
+    "signalActions": 4
+  },
+  "previewImagesNote": "Actual browser captures. The final intersection image was captured during running simulation at approximately 49 seconds; overview at 37.4 seconds."
+}

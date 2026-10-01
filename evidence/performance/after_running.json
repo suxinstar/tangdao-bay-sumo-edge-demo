@@ -1,0 +1,15 @@
+{
+  "fixture": "227 vehicles, synthetic advancing clock with fixed vehicle positions and task ages; rendering test only",
+  "metrics": {
+    "seconds": 20.149020000128075,
+    "mainThreadTaskSeconds": 1.1763119999999998,
+    "scriptSeconds": 0.6039679999999998,
+    "mainThreadDutyPercent": 5.83806061035486,
+    "layouts": 73,
+    "styleRecalculations": 111,
+    "heapMB": 17.340980529785156
+  },
+  "detailsStart": "画质：轻量 24 FPS 上限；像素比 0.85；三角形 69,485；累计绘制 740；状态请求 66；标签更新 66；同步尺寸测量 0；特效池 1，本帧另有 0 项仅显示在事件/指标中。GPU：ANGLE (Intel, Intel(R) UHD Graphics 730 (0x00004682) Direct3D11 vs_5_0 ps_5_0, D3D11)。",
+  "detailsEnd": "画质：轻量 24 FPS 上限；像素比 0.85；三角形 69,501；累计绘制 1186；状态请求 105；标签更新 105；同步尺寸测量 0；特效池 0，本帧另有 0 项仅显示在事件/指标中。GPU：ANGLE (Intel, Intel(R) UHD Graphics 730 (0x00004682) Direct3D11 vs_5_0 ps_5_0, D3D11)。",
+  "summary": "22 FPS · 44 次绘制 · 6/12 特效"
+}

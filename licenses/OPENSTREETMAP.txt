@@ -1,0 +1,9 @@
+Map data copyright OpenStreetMap contributors.
+Data and derived map database: Open Data Commons Open Database License (ODbL) 1.0.
+Attribution: https://www.openstreetmap.org/copyright
+License: https://opendatacommons.org/licenses/odbl/1-0/
+
+The original downloaded OSM XML and reproducible conversion script are included.
+OSM roads and building footprints describe community map data. Traffic demand,
+signal timing, RSU locations and sensor/compute effects in this demo are simulated.
+Do not interpret missing features or assumed heights as a verified survey.

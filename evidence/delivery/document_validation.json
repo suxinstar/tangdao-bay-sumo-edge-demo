@@ -1,0 +1,10 @@
+{
+  "document": "docs/唐岛湾声学边缘交通演示_项目交付手册_v1.2.docx",
+  "sha256": "2174a93322f03f97610267ec6eb13651fd3920a3b4b79337f865a35bfbe5802e",
+  "pages": 10,
+  "renderer": "Microsoft Word COM ExportAsFixedFormat, then pypdfium2 PNGs",
+  "visualInspection": "All 10 rendered pages visually inspected; no observed clipping, overlaps or stray blank pages.",
+  "standardRenderer": "Unavailable: LibreOffice not installed; Word fallback completed.",
+  "editable": true,
+  "scope": "DOCX structure and rendered layout; not a new simulation experiment."
+}

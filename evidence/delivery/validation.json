@@ -1,0 +1,167 @@
+{
+  "checkedAt": "2026-10-01T03:05:37.330Z",
+  "scope": "交付副本回归检查；不启动 HTTP 或 SUMO，不重跑历史 600 / 120 / 601.4 秒仿真，不更改地图或生产源码。",
+  "root": "<project-root>",
+  "overallPassed": true,
+  "runtimes": {
+    "node": "Node.js validation runtime",
+    "python": "Python validation runtime"
+  },
+  "executed": [
+    {
+      "command": "node --check web/app.js",
+      "scope": "JavaScript syntax check",
+      "chunk_id": "f5f7ad",
+      "wall_time_seconds": 2.4e-05,
+      "exit_code": 0,
+      "original_token_count": 0,
+      "output": ""
+    },
+    {
+      "command": "node tests/frontend_performance.mjs",
+      "scope": "16 frontend logic/resource checks using actual Three.js geometry and mocked DOM/timers/renderer; no browser/GPU benchmark",
+      "chunk_id": "eac73f",
+      "wall_time_seconds": 0.6094072,
+      "exit_code": 0,
+      "original_token_count": 218,
+      "output": "{\n  \"passed\": true,\n  \"checks\": 16,\n  \"details\": [\n    \"actual_scene_and_signal_batches\",\n    \"vehicle_color_and_matrix_upload_cache\",\n    \"labels_have_no_synchronous_size_reads\",\n    \"stage_boundaries\",\n    \"bounded_pool_1000_tasks\",\n    \"expired_effects_reused\",\n    \"standard_limit_and_reduction_release\",\n    \"outside_view_creates_no_effects\",\n    \"repeat_reset_does_not_grow_resources\",\n    \"paused_render_schedules_no_continuation\",\n    \"paused_has_zero_pending_frame_work\",\n    \"quality_fps_cap\",\n    \"frame_delay_at_least_41ms\",\n    \"hidden_cancels_frames_and_poll_guard\",\n    \"hidden_has_zero_frame_timers\",\n    \"dispose_releases_scene_resources\"\n  ],\n  \"scope\": \"Actual frontend functions and Three.js geometry in Node VM; mocked DOM/timers/renderer. Not a GPU or browser benchmark.\",\n  \"fixture\": {\n    \"vehicles\": 227,\n    \"tasks\": 100,\n    \"signals\": 4\n  }\n}\n"
+    },
+    {
+      "command": "python -m unittest discover -s tests -v",
+      "scope": "5 pure queue/signal policy unit tests; no live SUMO run",
+      "chunk_id": "4bb32c",
+      "wall_time_seconds": 0.3197792,
+      "exit_code": 0,
+      "original_token_count": 197,
+      "output": "test_least_finish_offloads_only_when_local_work_exceeds_transfer (test_simulation.QueueTests.test_least_finish_offloads_only_when_local_work_exceeds_transfer) ... ok\r\ntest_local_queue_never_overlaps_single_server (test_simulation.QueueTests.test_local_queue_never_overlaps_single_server) ... ok\r\ntest_once_per_green_and_total_green_bound (test_simulation.SignalTests.test_once_per_green_and_total_green_bound) ... ok\r\ntest_result_must_return_before_any_signal_change (test_simulation.SignalTests.test_result_must_return_before_any_signal_change) ... ok\r\ntest_yellow_and_nonmatching_lane_never_extend (test_simulation.SignalTests.test_yellow_and_nonmatching_lane_never_extend) ... ok\r\n\r\n----------------------------------------------------------------------\r\nRan 5 tests in 0.000s\r\n\r\nOK\r\n"
+    }
+  ],
+  "notExecuted": [
+    {
+      "command": "python scripts/build_map.py --verify",
+      "status": "skipped_after_source_review",
+      "reason": "此命令不是只读检查：先调用 netconvert 重写网络、场景、路由与清单，再运行完整 600 秒 SUMO。为保留已交付地图及历史证据，本次未执行，改用下列只读一致性检查。",
+      "source": "scripts/build_map.py:137-169 and final verify block"
+    }
+  ],
+  "readOnlyMapAndEvidenceChecks": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "osm_snapshot_sha256",
+        "passed": true,
+        "details": "7d008dd5adab60d4811444d9c331886782751e8431d813ba450227286f42754a"
+      },
+      {
+        "name": "scene_inventory",
+        "passed": true,
+        "details": {
+          "roadsIncludingInternal": 1041,
+          "roadEdges": 324,
+          "buildings": 129,
+          "areas": 26,
+          "rsus": 4
+        }
+      },
+      {
+        "name": "rsu_tls_mapping",
+        "passed": true,
+        "details": {
+          "selectedTls": [
+            "GS_cluster_1517777517_4249906627_4461902426_4461902648",
+            "GS_cluster_3265502517_4249911559_8776649021_8776649022",
+            "GS_cluster_3265502525_4461902412",
+            "GS_cluster_3265502553_4461902390_6902626159_6902632526"
+          ],
+          "allTlsCount": 11
+        }
+      },
+      {
+        "name": "six_explicit_connected_routes",
+        "passed": true,
+        "details": [
+          {
+            "route": "coast_east",
+            "allEdgesExist": true,
+            "allAdjacentConnectionsExist": true
+          },
+          {
+            "route": "coast_west",
+            "allEdgesExist": true,
+            "allAdjacentConnectionsExist": true
+          },
+          {
+            "route": "side_1",
+            "allEdgesExist": true,
+            "allAdjacentConnectionsExist": true
+          },
+          {
+            "route": "side_2",
+            "allEdgesExist": true,
+            "allAdjacentConnectionsExist": true
+          },
+          {
+            "route": "side_3",
+            "allEdgesExist": true,
+            "allAdjacentConnectionsExist": true
+          },
+          {
+            "route": "side_4",
+            "allEdgesExist": true,
+            "allAdjacentConnectionsExist": true
+          }
+        ]
+      },
+      {
+        "name": "sumo_config_references",
+        "passed": true,
+        "details": [
+          "tangdao.net.xml",
+          "traffic.rou.xml"
+        ]
+      },
+      {
+        "name": "building_height_sources",
+        "passed": true,
+        "details": {
+          "osm_height": 10,
+          "osm_levels": 7,
+          "assumed": 112
+        }
+      },
+      {
+        "name": "historical_evidence_files_exist",
+        "passed": true,
+        "details": [
+          "data/build_stats.json",
+          "data/sumo_validation.log",
+          "data/sumo_summary.xml",
+          "data/tripinfo.xml",
+          "verification/backend_verification.json",
+          "verification/backend_120s_export.json",
+          "verification/backend_local120s_export.json",
+          "evidence/acceptance.json",
+          "evidence/performance/live_smoke.json",
+          "evidence/performance/summary.json"
+        ]
+      }
+    ],
+    "scope": "Read-only consistency of the delivered snapshot, network, scene and historical evidence; no SUMO process, map rebuild, HTTP service or fresh 600/120/601-second run."
+  },
+  "historicalRunEvidence": {
+    "rerun": false,
+    "existingFiles": [
+      "data/build_stats.json",
+      "verification/backend_verification.json",
+      "evidence/performance/live_smoke.json"
+    ],
+    "note": "600秒地图运行、120秒两策略闭环、601.4秒浏览器联动为已有记录，本次仅核对文件与交付数据一致性。"
+  },
+  "mutations": {
+    "productionSourceChanged": false,
+    "mapChanged": false,
+    "originalLiveServiceTouched": false,
+    "testArtifacts": "前端检查按现有脚本重写交付副本 evidence/performance/frontend_checks.json；单元测试可产生 __pycache__，打包时应排除。"
+  },
+  "publicationNote": "Host-specific paths and personal diagnostic metadata omitted; measured results retained. Original evidence preserved privately."
+}

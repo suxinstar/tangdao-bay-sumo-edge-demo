@@ -1,0 +1,5 @@
+# Preserve release-manifest byte hashes across clone and archive downloads.
+* -text
+*.png binary
+*.docx binary
+*.xml -text

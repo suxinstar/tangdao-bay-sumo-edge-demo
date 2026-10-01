@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='utf-8'?>
+<configuration><input><net-file value="tangdao.net.xml" /><route-files value="traffic.rou.xml" /></input><time><begin value="0" /><end value="600" /><step-length value="0.2" /></time><random_number><seed value="42" /></random_number><processing><time-to-teleport value="-1" /></processing><report><no-step-log value="true" /><duration-log.statistics value="true" /></report></configuration>

@@ -1,0 +1,12 @@
+{
+  "cpu": "13th Gen Intel Core i5-13400",
+  "logicalProcessors": 16,
+  "physicalMemoryGiB": 31.75,
+  "gpus": [
+    "Intel UHD Graphics 730",
+    "NVIDIA GeForce RTX 4060 8GiB"
+  ],
+  "originalBrowserRenderer": "ANGLE Intel UHD Graphics 730 Direct3D11",
+  "scope": "Historical benchmark environment only; personal diagnostic export and workstation paths omitted.",
+  "publicationNote": "Host-specific paths and personal diagnostic metadata omitted; measured results retained. Original evidence preserved privately."
+}

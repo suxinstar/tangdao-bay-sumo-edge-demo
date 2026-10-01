@@ -1,0 +1,49 @@
+{
+  "version": "1.1-performance",
+  "confirmedCauses": [
+    "Old frontend continuously rendered an unchanged paused/disconnected scene.",
+    "Per-frame label writes and synchronous size reads caused excessive layouts.",
+    "User Edge report identifies Intel UHD 730 as active GPU and a 2560x1440 120 Hz display."
+  ],
+  "notEstablished": [
+    "Edge installation is damaged",
+    "Graphics acceleration is disabled",
+    "Direct Edge full-screen performance after the fix"
+  ],
+  "benchmarkScope": "Codex in-app Chromium on Intel UHD 730, not user Edge profile; 120-second snapshot; 227 cars; paused; static camera",
+  "before": {
+    "seconds": 36.67597500002012,
+    "mainThreadTaskSeconds": 28.241766000000002,
+    "scriptSeconds": 18.601733,
+    "mainThreadDutyPercent": 77.00344980599564,
+    "layouts": 6998,
+    "styleRecalculations": 6998,
+    "heapMB": 36.83994674682617
+  },
+  "after": {
+    "seconds": 39.32454299996607,
+    "mainThreadTaskSeconds": 0.16452999999999995,
+    "scriptSeconds": 0.011840000000000017,
+    "mainThreadDutyPercent": 0.41839011326881004,
+    "layouts": 26,
+    "styleRecalculations": 26,
+    "heapMB": 10.19082260131836
+  },
+  "beforeAdditionalFrames": 3436,
+  "afterAdditionalFrames": 0,
+  "defaultLimits": {
+    "fps": 24,
+    "pixelRatioMax": 0.85,
+    "effectObjectsMax": 12
+  },
+  "standardLimits": {
+    "fps": 30,
+    "pixelRatioMax": 1,
+    "effectObjectsMax": 24
+  },
+  "backendUnchangedEvidence": "simulation_unchanged.json",
+  "frontendCheckEvidence": "frontend_checks.json",
+  "liveVerification": "live_smoke.json",
+  "windowsGpuPreferenceChanged": false,
+  "caveat": "Main-thread duty percent is TaskDuration / wall time, not whole-computer CPU usage. Running fixture positions are fixed; that measurement is not real traffic-motion performance."
+}

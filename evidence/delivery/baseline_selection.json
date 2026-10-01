@@ -1,0 +1,20 @@
+{
+  "release": "1.2.0",
+  "date": "2026-10-01",
+  "scope": "Public portable release of the verified performance baseline. Launch preparation and documentation improved; simulation and scheduling unchanged.",
+  "baselineArchive": "TangdaoBay_3D_Demo_v1_1_performance_20261001.zip",
+  "baselineFrontendSha256": "d77d705219753710034eea2e208bd8e3c4e347108eb57eec61e048d92bf63bc7",
+  "frontendMatchesVerifiedBaseline": true,
+  "excluded": [
+    "runtime logs and older run directories",
+    "development caches and QA scratch",
+    "superseded documents"
+  ],
+  "currentRunExport": {
+    "file": "current_run_export.json",
+    "capturedAt": "2026-10-01T03:04:12.392040+00:00",
+    "bytes": 5543807,
+    "sha256": "d09df601324762bd7a4e100e6ac74267da9777a25efb2efb388577f26e7f61fb",
+    "note": "Read-only snapshot. Launching the package starts a new seeded run; this JSON is an archived record, not a resume checkpoint."
+  }
+}

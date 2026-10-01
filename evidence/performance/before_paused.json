@@ -1,0 +1,33 @@
+{
+  "browser": "Codex in-app Chromium on Intel UHD 730, not user Edge profile",
+  "fixture": "120-second snapshot; 227 cars; paused; static camera",
+  "metrics": {
+    "seconds": 36.67597500002012,
+    "mainThreadTaskSeconds": 28.241766000000002,
+    "scriptSeconds": 18.601733,
+    "mainThreadDutyPercent": 77.00344980599564,
+    "layouts": 6998,
+    "styleRecalculations": 6998,
+    "heapMB": 36.83994674682617
+  },
+  "diagnosticStart": {
+    "frames": 364,
+    "fps": "73.6",
+    "calls": 125,
+    "triangles": 66077,
+    "effects": 100,
+    "geometries": 256,
+    "pixelRatio": 1,
+    "glRenderer": "ANGLE (Intel, Intel(R) UHD Graphics 730 (0x00004682) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+  },
+  "diagnosticEnd": {
+    "frames": 3800,
+    "fps": "101.3",
+    "calls": 125,
+    "triangles": 66077,
+    "effects": 100,
+    "geometries": 256,
+    "pixelRatio": 1,
+    "glRenderer": "ANGLE (Intel, Intel(R) UHD Graphics 730 (0x00004682) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+  }
+}

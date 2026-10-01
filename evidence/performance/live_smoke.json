@@ -1,0 +1,35 @@
+{
+  "scope": "Real running SUMO server and browser UI, not the rendering fixture.",
+  "simTime": 601.4,
+  "status": "paused",
+  "speed": 1,
+  "metrics": {
+    "sensed": 3770,
+    "completed": 1254,
+    "offloaded": 2847,
+    "meanLatency": 154.31610845295066,
+    "meanQueueDelay": 151.59497226587186,
+    "signalActions": 65,
+    "signalRejected": 1189,
+    "vehicles": 374,
+    "completedTrips": 797,
+    "meanTripTime": 196.60677540777917,
+    "haltingVehicles": 14
+  },
+  "browser": "Codex in-app Chromium on Intel UHD 730, not user Edge profile",
+  "uiObserved": [
+    "vehicle count agrees with API",
+    "task sensing and dispatch events",
+    "cross-RSU trace",
+    "returned-task signal decisions",
+    "pause button and speed selector work"
+  ],
+  "screenshot": "live_scene.png",
+  "stateSnapshot": "live_601s_state.json",
+  "pausedFrames": {
+    "first": 3880,
+    "last": 3880,
+    "unchanged": true
+  },
+  "browserErrors": []
+}

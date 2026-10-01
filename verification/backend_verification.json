@@ -1,0 +1,87 @@
+{
+  "health": {
+    "app": "tangdao-bay-demo",
+    "root": "<project-root>",
+    "pid": 52056,
+    "ready": true,
+    "backend": "SUMO/TraCI",
+    "sumo": "SUMO 1.25.0",
+    "status": "paused",
+    "error": null,
+    "syntheticAcoustics": true,
+    "portProtocol": "localhost HTTP",
+    "runId": "20261001T015531_821078Z"
+  },
+  "unit_test_command": "python -m unittest discover -s tests -v",
+  "wallTimeFor120SimulationSeconds": 3.0149999998975545,
+  "firstMetrics": {
+    "sensed": 382,
+    "completed": 205,
+    "offloaded": 296,
+    "meanLatency": 11.96780487804878,
+    "meanQueueDelay": 9.24970878268089,
+    "signalActions": 13,
+    "signalRejected": 192,
+    "vehicles": 227,
+    "completedTrips": 15,
+    "meanTripTime": 94.61333333333333,
+    "haltingVehicles": 82
+  },
+  "firstRunId": "20261001T015531_821078Z",
+  "checks": {
+    "signalsAfterReturnedResults": true,
+    "greenDurationWithinBound": true,
+    "actualSignalCount": 13,
+    "signalExample": {
+      "id": 62,
+      "time": 27.0,
+      "type": "signal",
+      "text": "T00014 返回 → GS_cluster_3265502517_4249911559_8776649021_8776649022 当前绿灯延长 4.0 秒",
+      "rsuId": "RSU_1",
+      "taskId": "T00014",
+      "applied": true,
+      "tlsId": "GS_cluster_3265502517_4249911559_8776649021_8776649022",
+      "phase": 0,
+      "laneId": "320042747#1_0",
+      "spent": 27.0,
+      "beforeRemaining": 1.0,
+      "afterRemaining": 5.0,
+      "returnEnd": 26.859735818953013,
+      "beforeState": "GGGGGGGGGgrrrr",
+      "matchingGreen": true,
+      "phaseEpoch": 0
+    },
+    "signalsMatchGreenWithoutYellow": true,
+    "atMostOneExtensionPerPhase": true,
+    "completeTaskCount": 205,
+    "signalLinksHaveActualPerLinkState": true,
+    "singleServerReservationsDoNotOverlap": true,
+    "resetSameSeedTasksIdentical": true,
+    "resetSameSeedEventsIdentical": true,
+    "resetSameSeedMetricsIdentical": true,
+    "localSchedulerHasNoOffload": true
+  },
+  "taskSha256": [
+    "7370496b6b84ef07564b42691ec7810245c20d24a3ec9d9d500a87ad5b5d86fd",
+    "7370496b6b84ef07564b42691ec7810245c20d24a3ec9d9d500a87ad5b5d86fd"
+  ],
+  "local120SecondsMetrics": {
+    "sensed": 382,
+    "completed": 189,
+    "offloaded": 0,
+    "meanLatency": 13.41058201058201,
+    "meanQueueDelay": 11.360274983094971,
+    "signalActions": 13,
+    "signalRejected": 176,
+    "vehicles": 227,
+    "completedTrips": 15,
+    "meanTripTime": 94.61333333333333,
+    "haltingVehicles": 82
+  },
+  "limitations": [
+    "synthetic acoustics and timing",
+    "not a traffic-benefit study",
+    "120 seconds is a bounded integration check"
+  ],
+  "publicationNote": "Host-specific paths and personal diagnostic metadata omitted; measured results retained. Original evidence preserved privately."
+}

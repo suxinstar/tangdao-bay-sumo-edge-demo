@@ -1,0 +1,91 @@
+{
+  "seed": 42,
+  "stepLengthS": 0.2,
+  "durationS": 600,
+  "source": "synthetic",
+  "routes": [
+    {
+      "id": "coast_east",
+      "edges": [
+        "320042747#1",
+        "320042747#5",
+        "320042747#13",
+        "320042747#17",
+        "320042747#22"
+      ],
+      "periodS": 1.35,
+      "beginS": 0,
+      "endS": 580,
+      "source": "synthetic_seeded_demo"
+    },
+    {
+      "id": "coast_west",
+      "edges": [
+        "834910233#11",
+        "834910233#16",
+        "834910233#20",
+        "834910233#25",
+        "834910233#29",
+        "834910233#34"
+      ],
+      "periodS": 1.9,
+      "beginS": 1,
+      "endS": 580,
+      "source": "synthetic_seeded_demo"
+    },
+    {
+      "id": "side_1",
+      "edges": [
+        "543852199#19",
+        "320042747#5",
+        "320042747#13",
+        "320042747#17",
+        "320042747#22"
+      ],
+      "periodS": 5.0,
+      "beginS": 3,
+      "endS": 580,
+      "source": "synthetic_seeded_demo"
+    },
+    {
+      "id": "side_2",
+      "edges": [
+        "141451700#10",
+        "834910233#25",
+        "834910233#29",
+        "834910233#34"
+      ],
+      "periodS": 6.0,
+      "beginS": 4,
+      "endS": 580,
+      "source": "synthetic_seeded_demo"
+    },
+    {
+      "id": "side_3",
+      "edges": [
+        "320048294#12",
+        "320042747#17",
+        "320042747#22"
+      ],
+      "periodS": 4.4,
+      "beginS": 5,
+      "endS": 580,
+      "source": "synthetic_seeded_demo"
+    },
+    {
+      "id": "side_4",
+      "edges": [
+        "737282722#5",
+        "834910233#16",
+        "834910233#20",
+        "834910233#25",
+        "834910233#29",
+        "834910233#34"
+      ],
+      "periodS": 6.2,
+      "beginS": 6,
+      "endS": 580,
+      "source": "synthetic_seeded_demo"
+    }
+  ]
+}

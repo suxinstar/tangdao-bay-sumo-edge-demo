@@ -1,0 +1,58 @@
+Warning: Discarding unusable type 'waterway.river' (first occurrence for edge '364477999').
+Warning: New value for oneway found: reversible
+Warning: New value for oneway found: reversible
+Warning: Discarding unknown compound 'usage.main' in type 'railway.subway|usage.main' (first occurrence for edge '654109481').
+Warning: Discarding unusable type 'railway.platform' (first occurrence for edge '1021098405').
+Warning: Removing pt stop '11001494012' on non existing edge '834910233#0'.
+Warning: Removing pt stop '11001494016' on non existing edge '834910233#0'.
+Warning: Removing pt stop '11001494020' on non existing edge '834910233#0'.
+Warning: Removing pt stop '11001494037' on non existing edge '834910233#36'.
+Warning: Removing pt stop '11001494039' on non existing edge '320042747#0'.
+Warning: Removed a road without junctions: -544354174.
+Warning: Removed a road without junctions: -563634680.
+Warning: Removed a road without junctions: -913186924#1,-913186924#0.
+Warning: Removed a road without junctions: 544354174.
+Warning: Removed a road without junctions: 563634680.
+Warning: Could not find corresponding edge or compatible lane for free-floating pt stop '11001494037' (石油大学南门). Thus, it will be removed!
+Warning: Could not find corresponding edge or compatible lane for free-floating pt stop '11001494039' (石油大学南门). Thus, it will be removed!
+Warning: Could not find corresponding edge or compatible lane for free-floating pt stop '11001494042' (海上嘉年华东). Thus, it will be removed!
+Warning: Could not find corresponding edge or compatible lane for free-floating pt stop '11001494043' (海上嘉年华东). Thus, it will be removed!
+Warning: Cannot revise pt stop localization for pt line '10467727', which has no route edges. Ignoring!
+Warning: Removed invalid stop '5898642167' from line '10467727'.
+Warning: Removed invalid stop '9404015671' from line '10467727'.
+Warning: Removed invalid stop '9404015660' from line '10467727'.
+Warning: Removed invalid stop '9404015662' from line '10467727'.
+Warning: Removed invalid stop '9404015664' from line '10467727'.
+Warning: Could not assign stop '9381412719' to pt line '13067813' (closest edge 'NULL', distance 179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368.00). Ignoring!
+Warning: Could not assign stop '9381412721' to pt line '13067813' (closest edge 'NULL', distance 179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368.00). Ignoring!
+Warning: Could not assign stop '9381412728' to pt line '13067813' (closest edge 'NULL', distance 179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368.00). Ignoring!
+Warning: Could not assign stop '9381412731' to pt line '13067813' (closest edge 'NULL', distance 179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368.00). Ignoring!
+Warning: Could not assign stop '9381412736' to pt line '13067813' (closest edge 'NULL', distance 179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368.00). Ignoring!
+Warning: Cannot revise pt stop localization for pt line '9287539', which has no route edges. Ignoring!
+Warning: Ambiguity in turnarounds computation at junction '13375307670'.
+Warning: The traffic light '13670901332' does not control any links; it will not be build.
+Warning: Could not build program '0' for traffic light '13670901332'
+Warning: The traffic light '13670901333' does not control any links; it will not be build.
+Warning: Could not build program '0' for traffic light '13670901333'
+Warning: The traffic light '1548278296' does not control any links; it will not be build.
+Warning: Could not build program '0' for traffic light '1548278296'
+Warning: The traffic light '2753559421' does not control any links; it will not be build.
+Warning: Could not build program '0' for traffic light '2753559421'
+Warning: Minor green from edge '320042747#5' to edge '425696586#1' exceeds 19.44m/s. Maybe a left-turn lane is missing.
+Warning: Minor green from edge '320042747#1' to edge '543852199#1' exceeds 19.44m/s. Maybe a left-turn lane is missing.
+Warning: Minor green from edge '320042747#13' to edge '-320048294#14' exceeds 19.44m/s. Maybe a left-turn lane is missing.
+Warning: Minor green from edge '320042747#17' to edge '320048284#1' exceeds 19.44m/s. Maybe a left-turn lane is missing.
+Warning: Minor green from edge '320042747#27' to edge '364477967#1' exceeds 19.44m/s. Maybe a left-turn lane is missing.
+Warning: Speed of straight connection '1458414376_0->-80727625#0_0' reduced by 13.80 due to turning radius of 22.81 (length=8.51, angle=37.15).
+Warning: Speed of turning connection '543852199#4_0->425696589#1_0' reduced by 23.88 due to turning radius of 2.77 (length=2.94, angle=100.35).
+Warning: Speed of turning connection '1147384068#0_0->-80727625#1_0' reduced by 22.84 due to turning radius of 4.44 (length=5.51, angle=101.68).
+Warning: Intersecting left turns at junction 'cluster_13375307666_3685215018' from lane '364477886#2_0' and lane '1147384068#0_0' (increase junction radius to avoid this).
+Warning: Speed of turning connection '138421943#3_0->425696586#9_0' reduced by 22.00 due to turning radius of 6.07 (length=9.15, angle=114.53).
+Warning: Intersecting left turns at junction 'cluster_8946647194_8946647196' from lane '425696586#1_0' and lane '141451700#9_0' (increase junction radius to avoid this).
+Warning: Removed 42 pt stops because they could not be assigned to the network
+Warning: 24 total messages of type: Could not assign stop '%' to pt line '%' (closest edge '%', distance %). Ignoring!
+Warning: 34 total messages of type: Minor green from edge '%' to edge '%' exceeds %m/s. Maybe a left-turn lane is missing.
+Warning: 6 total messages of type: Removed a road without junctions: %.
+Warning: 42 total messages of type: Removed invalid stop '%' from line '%'.
+Warning: 87 total messages of type: Removing pt stop '%' on non existing edge '%'.
+Success.

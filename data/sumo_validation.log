@@ -1,0 +1,21 @@
+Loading net-file from 'scenario/tangdao.net.xml' ... done (46ms).
+Loading route-files incrementally from 'scenario/traffic.rou.xml'
+Loading done.
+Simulation version 1.25.0 started with time: 0.00.
+Simulation ended at time: 600.00.
+Reason: The final simulation step has been reached.
+Performance:
+ Duration: 3.80s
+ Real time factor: 158.061
+ UPS: 253956.006322
+Vehicles:
+ Inserted: 1171
+ Running: 354
+ Waiting: 0
+Statistics (avg of 817):
+ RouteLength: 1945.52
+ Speed: 10.69
+ Duration: 186.25
+ WaitingTime: 38.10
+ TimeLoss: 69.10
+ DepartDelay: 0.04

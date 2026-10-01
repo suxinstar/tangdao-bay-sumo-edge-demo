@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#102334">
+  <title>唐岛湾 · 声学边缘交通演示</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="importmap">{"imports":{"three":"/vendor/three.module.js","three/addons/controls/OrbitControls.js":"/vendor/OrbitControls.js"}}</script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="brand"><span class="eyebrow">TANGDAO BAY / LIVE SIMULATION</span><h1>唐岛湾<span>声学边缘交通演示</span></h1></div>
+    <div class="header-actions"><span id="connection" class="connection loading"><i></i>正在连接</span><a class="header-link" href="/api/export" download>导出实验记录 ↗</a><button id="about-button" class="icon-button" title="数据与演示说明" aria-label="数据与演示说明">ⓘ</button></div>
+  </header>
+  <main class="workspace">
+    <section class="viewport" id="viewport" aria-label="可旋转缩放的三维交通场景">
+      <div id="canvas-container"></div><div id="map-labels" aria-hidden="true"></div>
+      <div class="scene-heading"><span class="scene-kicker">真实地理轮廓 · 模拟交通过程</span><h2 id="scene-name">唐岛湾北岸</h2><p>车辆驶入 → 感知任务 → 跨节点计算 → 信号响应</p></div>
+      <nav class="map-tools" aria-label="三维场景控制"><button id="overview-button" title="查看全图">⌗ 全景</button><button id="focus-button" class="active" title="聚焦 RSU 部署区域">◎ 聚焦路口</button><label><input id="coverage-toggle" type="checkbox" checked><span>感知覆盖</span></label></nav>
+      <div class="scene-status"><span class="live-dot"></span><span id="scene-status-text">等待 SUMO 状态</span></div>
+      <div class="render-controls"><label for="quality-select">画质 <select id="quality-select"><option value="light" selected>轻量 · 省资源</option><option value="standard">标准</option></select></label><span>仅影响显示，不改变仿真或指标</span><details id="performance-diagnostics"><summary id="performance-summary">性能诊断 · 准备中</summary><p id="performance-details"></p></details></div>
+      <div id="loading" class="loading-panel"><div class="loader"></div><h3>正在构建三维街区</h3><p id="loading-message">读取真实道路、建筑轮廓和仿真状态…</p></div>
+      <div id="error-banner" class="error-banner" role="alert" hidden></div>
+      <div class="scene-bottom"><div class="legend"><span><i class="legend-vehicle"></i>SUMO 车辆</span><span><i class="legend-sense"></i>感知 / 计算</span><span><i class="legend-transfer"></i>任务卸载</span><span><i class="legend-return"></i>结果回传</span></div><span class="interaction-hint">拖动旋转 · 滚轮缩放 · 右键平移</span></div>
+      <section class="pipeline-panel" aria-label="实时任务流程"><div class="pipeline-top"><span>一次感知，如何影响路口</span><span id="trace-label">等待第一项任务</span></div><div class="pipeline" id="pipeline"><div data-stage="sense"><b>01</b><span>车辆感知</span><small>生成声学任务</small></div><i>→</i><div data-stage="dispatch"><b>02</b><span>边缘调度</span><small>本地 / 跨 RSU</small></div><i>→</i><div data-stage="compute"><b>03</b><span>模拟推理</span><small>队列与服务时间</small></div><i>→</i><div data-stage="return"><b>04</b><span>结果回传</span><small>完成后才生效</small></div><i>→</i><div data-stage="signal"><b>05</b><span>信号决策</span><small>保持安全相位</small></div></div></section>
+    </section>
+    <aside class="dashboard" aria-label="仿真控制和实时状态">
+      <section class="control-section"><div class="section-heading"><h2>仿真控制</h2><span id="run-state" class="state-badge">准备中</span></div><div class="clock-row"><span>仿真时间</span><strong id="sim-clock">00:00.0</strong><small id="sim-seconds">0.0 s</small></div><div class="control-row"><button id="play-button" class="primary-button" disabled>Ⅱ 暂停</button><button id="reset-button" class="secondary-button" disabled title="以相同随机种子重新开始">↺ 重置</button><select id="speed-select" aria-label="仿真速度"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></div><label class="algorithm-label" for="scheduler-select">任务调度策略 <span>切换后重新开始</span></label><select id="scheduler-select"><option value="least_finish">最早完成 · 允许跨 RSU</option><option value="local">本地执行 · 不卸载</option></select><p class="control-note" id="control-note">时间、任务和信号均来自本地仿真。</p></section>
+      <section class="metrics-section"><div class="metric-card"><span>在场车辆</span><strong id="metric-vehicles">—</strong><small>SUMO 当前快照</small></div><div class="metric-card"><span>已完成 / 已感知</span><strong id="metric-completed">— <em>/ —</em></strong><small>实际任务计数</small></div><div class="metric-card"><span>跨 RSU 卸载</span><strong id="metric-offloaded">—</strong><small id="offload-ratio">等待任务</small></div><div class="metric-card"><span>平均任务时延</span><strong id="metric-latency">— <em>s</em></strong><small>完成任务的仿真时延</small></div></section>
+      <section class="rsu-section"><div class="section-heading"><h2>边缘节点</h2><span id="rsu-count">— 个 RSU</span></div><div id="rsu-list" class="rsu-list"><div class="empty-state">正在读取节点部署…</div></div></section>
+      <section class="events-section"><div class="section-heading"><h2>事件流</h2><span id="event-count">实时</span></div><div id="event-list" class="event-list" role="log" aria-live="off"><div class="empty-state">车辆进入感知区后，事件将在这里出现。</div></div></section>
+      <div class="signal-summary"><span class="signal-indicator" aria-hidden="true">●</span><span>已记录信号响应</span><strong id="metric-signals">—</strong><span>次</span></div>
+    </aside>
+  </main>
+  <footer class="data-strip"><span><i></i><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap</a> 真实道路与建筑轮廓</span><span>模拟车流 / 声学任务 / RSU 部署</span><button id="data-details">数据来源与边界 ↗</button></footer>
+  <dialog id="about-dialog"><form method="dialog"><button class="dialog-close" aria-label="关闭">×</button></form><span class="eyebrow">DATA & MODEL BOUNDARY</span><h2>看见完整过程，区分真实与模拟</h2><p>道路、建筑轮廓与水域/绿地来自 OpenStreetMap。建筑高度优先使用 OSM 高度或层数；缺失高度使用示意值，不代表测绘精度。</p><ul><li>车辆位置、车速、路口相位由实际运行的 SUMO 提供。</li><li>RSU 的位置、覆盖、计算资源与任务时延是本演示的配置。</li><li>声学任务由车辆经过事件触发，采用模拟感知结果；没有执行真实录音的神经网络识别。</li><li>流动数据包、回传与节点状态跟随后端任务时间戳；道路标签与建筑立体外观只服务于观察。</li><li>信号计划与控制策略是仿真配置，不是当地市政实测配时。完成的任务结果才可以进入信号决策，决策也可能被约束拒绝。</li></ul><div id="metadata-notes" class="metadata-notes"></div><p class="dialog-foot">本页面用于软件流程与可行性演示，不能据此推断真实声学精度或实际交通改善幅度。</p></dialog>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

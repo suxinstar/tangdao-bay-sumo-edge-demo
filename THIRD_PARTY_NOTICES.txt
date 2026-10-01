@@ -1,0 +1,25 @@
+Third-party data and runtime components
+
+OpenStreetMap geographic data
+Copyright OpenStreetMap contributors. Licensed under Open Database License 1.0.
+https://www.openstreetmap.org/copyright
+https://opendatacommons.org/licenses/odbl/1-0/
+The original map snapshot, provenance and derived scene are included under data/.
+
+Three.js 0.180.0
+MIT license. Copyright and license text are preserved in licenses/ and web/vendor/.
+
+Eclipse SUMO 1.25.0 standard Windows distribution
+Runtime prepared from the official standard portable distribution, with upstream
+license and notice files preserved under _runtime. Consult the upstream package
+for EPL-2.0 and bundled third-party license terms.
+https://eclipse.dev/sumo/docs/Downloads.html
+
+Python 3.12.10 Windows embeddable distribution
+Runtime prepared from the official python.org distribution. Its LICENSE.txt is
+preserved under _runtime. Consult that file for Python and bundled component terms.
+https://www.python.org/ftp/python/3.12.10/
+
+Public repository visibility does not replace the license terms of dependencies
+and map data. No additional open-source license is declared here for the original
+application code.

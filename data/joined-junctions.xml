@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2026-10-01T09:54:50.578039+08:00 by Eclipse SUMO netconvert 1.25.0
+<netconvertConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <osm-files value="data/tangdao.osm.xml"/>
+    </input>
+
+    <output>
+        <output-file value="scenario/tangdao.net.xml"/>
+        <junctions.join-output value="data/joined-junctions.xml"/>
+        <output.street-names value="true"/>
+    </output>
+
+    <projection>
+        <proj.utm value="true"/>
+    </projection>
+
+    <processing>
+        <geometry.remove value="true"/>
+    </processing>
+
+    <tls_building>
+        <tls.discard-simple value="true"/>
+        <tls.join value="true"/>
+        <tls.guess-signals value="true"/>
+        <tls.cycle.time value="64"/>
+        <tls.yellow.time value="3"/>
+        <tls.allred.time value="1"/>
+        <tls.default-type value="static"/>
+    </tls_building>
+
+    <edge_removal>
+        <keep-edges.in-geo-boundary value="120.18,35.941,120.21,35.959"/>
+        <keep-edges.by-vclass value="passenger"/>
+        <remove-edges.isolated value="true"/>
+    </edge_removal>
+
+    <junctions>
+        <no-turnarounds value="true"/>
+        <junctions.join value="true"/>
+    </junctions>
+
+</netconvertConfiguration>
+-->
+
+<nodes version="1.20" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/nodes_file.xsd">
+    <join nodes="13371353921 5431318558"/>
+    <join nodes="13371353937 13371353938"/>
+    <join nodes="13375307666 3685215018"/>
+    <join nodes="3265502517 4249911559 8776649021 8776649022"/>
+    <join nodes="1517777517 4249906627 4461902426 4461902648"/>
+    <join nodes="3265502525 4461902412"/>
+    <join nodes="5253945041 6902626176"/>
+    <join nodes="3685211412 4461902623 6902632341 6902632415"/>
+    <join nodes="3265502553 4461902390 6902626159 6902632526"/>
+    <join nodes="1517777550 4249906651 4491195657 4491195658"/>
+    <join nodes="1548278295 4249906637"/>
+    <join nodes="1548278298 4249906655"/>
+    <join nodes="1548278337 6902632858"/>
+    <join nodes="3265502528 4491195660"/>
+    <join nodes="3265502529 4491195654 6902632310 941471471"/>
+    <join nodes="3265502958 4491195634"/>
+    <join nodes="3685214957 6902632320"/>
+    <join nodes="3685214966 6902632793 6902632842"/>
+    <join nodes="3685214980 4249906654"/>
+    <join nodes="3685215191 4491195633"/>
+    <join nodes="3685215201 5431318010"/>
+    <join nodes="3685215213 4491195636"/>
+    <join nodes="4249906635 4249906636"/>
+    <join nodes="4249906644 6902632405"/>
+    <join nodes="5431318550 8946647192"/>
+    <join nodes="5431318557 6902632319"/>
+    <join nodes="8946647194 8946647196"/>
+    <join nodes="8957791989 8957791991"/>
+</nodes>

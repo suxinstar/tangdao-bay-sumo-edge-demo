@@ -1,0 +1,49 @@
+{
+  "downloadedAt": "2026-10-01T01:49:49.788719+00:00",
+  "source": "OpenStreetMap",
+  "apiUrl": "https://api.openstreetmap.org/api/0.6/map?bbox=120.18,35.941,120.21,35.959",
+  "bbox": [
+    120.18,
+    35.941,
+    120.21,
+    35.959
+  ],
+  "license": "ODbL 1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "licenseUrl": "https://www.openstreetmap.org/copyright",
+  "sha256": "7d008dd5adab60d4811444d9c331886782751e8431d813ba450227286f42754a",
+  "osmSnapshotBase": null,
+  "counts": {
+    "nodes": 6228,
+    "ways": 459,
+    "relations": 54
+  },
+  "roadNames": [
+    "九华山路",
+    "九连山路",
+    "井冈山路",
+    "南盘江路",
+    "太行山路",
+    "富春江路",
+    "庐山路",
+    "椒江路",
+    "武夷山路",
+    "漓江西路",
+    "玉山路",
+    "王屋山路",
+    "珠江路",
+    "白云山路",
+    "百花山路",
+    "紫金山路",
+    "绣江东路",
+    "绣江西路",
+    "萧山路",
+    "西海岸蓝湾绿道",
+    "都江路",
+    "长江中路",
+    "长白山路",
+    "阿里山路",
+    "青弋江路"
+  ],
+  "downloadNote": "OSM map API includes full ways crossing bbox; source extents therefore exceed requested bbox."
+}

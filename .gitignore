@@ -1,0 +1,15 @@
+_runtime/
+runs/
+qa/
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+*.log
+!data/netconvert.log
+!data/sumo_validation.log
+~$*
+evidence/delivery/package_verification.json
+*.zip
+*.sha256.txt
