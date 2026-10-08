@@ -31,6 +31,7 @@ SUMO scene entry is `scenario/tangdao.sumocfg`. At least 3 selected junction RSU
 
 - `GET /api/scene`: scene.json.
 - `GET /api/state`: snapshot below; server simulation ticks independently under lock.
+- `GET /api/vehicle?id=<URL-encoded vehicle ID>`: complete current-run journey for one observed vehicle, without the global snapshot's recent-task/event limits. Indexed by vehicle so a follower does not download the whole run. Exactly one nonblank ID of at most 256 characters with no control characters is required (400 otherwise). Unknown or pre-reset IDs return 404 with `status:"unknown"` and empty task/event lists. No simulation mutation.
 - `POST /api/control` JSON `{action:"pause"|"resume"|"reset"|"speed"|"scheduler", value:...}`. Speed values 0.5,1,2,4. Scheduler `least_finish` or `local`. Reset cleanly restarts seeded SUMO. A changed scheduler takes effect after reset, or server resets automatically and says so.
 - `GET /api/health`: ready/backend/sumo status.
 - `GET /api/export`: downloadable JSON of run configuration, metadata, counters and events.
@@ -47,6 +48,27 @@ SUMO scene entry is `scenario/tangdao.sumocfg`. At least 3 selected junction RSU
  "trace": {"taskId":"T0001","stages":[{"key":"sense","state":"done"},{"key":"dispatch","state":"done"},{"key":"compute","state":"active"},{"key":"signal","state":"waiting"}]}
 }
 ```
+
+### Single-vehicle journey
+
+```json
+{
+ "runId":"current run identity", "simTime":40.2, "vehicleId":"v0",
+ "status":"present|departed|unknown",
+ "vehicle":{"id":"v0","x":100,"y":100,"angle":90,"speed":7,"laneId":"edge_0"},
+ "firstSeen":1.2,"lastSeen":40.2,"enteredAt":1.2,"leftAt":null,"arrivedAt":null,
+ "tasks":[{"id":"T00001","vehicleId":"v0","origin":"RSU_1","target":"RSU_2",
+           "created":12,"txEnd":12.4,"start":12.4,"finish":14,"returnEnd":14.2,
+           "status":"done","offloaded":true,"returned":true,"observedReturnTime":14.2,
+           "controlCheckedTime":14.2,"controlApplied":false,"controlReason":"检测车道当前非可延长绿灯"}],
+ "events":[{"id":1,"time":12,"type":"sense","vehicleId":"v0","taskId":"T00001","rsuId":"RSU_1","text":"..."}],
+ "summary":{"sensed":1,"completed":1,"offloaded":1,"pending":0}
+}
+```
+
+`present` means SUMO currently reports the vehicle. `departed` means it was observed in this run but is no longer present; its `vehicle` is the **last known** position/speed, never an extrapolated live position. `enteredAt` is the SUMO departure/entry event time, `leftAt` the first observed absence time, and `arrivedAt` exists only after an actual SUMO arrival event. If a short trip enters and arrives without a sampled position, `vehicle`, `firstSeen`, and `lastSeen` remain null. All timestamps are SUMO seconds; unavailable fields are null.
+
+Tasks remain in creation order, with full timing, lane/location, and any observed control outcome. Related sense/dispatch/complete/signal/signal_skip events carry `vehicleId` and are retained in event order. Global events such as reset/error/finished are not attributed to a vehicle. Completion counts require `returned=true`; neither a predicted finish time nor leaving the road creates a completion. A departed vehicle's outstanding tasks can still complete under the existing simulation; the maximum run-time limit remains unchanged. On run reset the journey indexes are cleared. Clients must discard prior traces on `runId` change and must not silently switch to a different vehicle when the followed vehicle leaves.
 
 ## Signal safety and truthfulness
 

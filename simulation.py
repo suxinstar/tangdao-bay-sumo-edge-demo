@@ -18,6 +18,7 @@ import subprocess
 import sys
 import threading
 import time
+from uuid import uuid4
 
 
 def reserve_task(nodes, origin, now, scheduler, work_factor=1.0):
@@ -91,6 +92,10 @@ class DemoSimulation:
         self.rng = random.Random(self.SEED)
         self.status, self.error, self.sim_time = 'paused', None, 0.0
         self.tasks, self.events, self.vehicles, self.signals = [], [], [], []
+        # Keep per-vehicle observations and task references for the journey API.
+        # The global snapshot remains bounded; no extra simulation work is reserved.
+        self.vehicle_history = {}
+        self.tasks_by_vehicle, self.events_by_vehicle, self.task_by_id = {}, {}, {}
         self.subscribed = set()
         self.seen, self.extended, self.phase_epochs, self.last_phases = set(), set(), {}, {}
         self.node_by_id = {}
@@ -106,7 +111,7 @@ class DemoSimulation:
                         'vehicles': 0, 'completedTrips': 0, 'meanTripTime': None,
                         'haltingVehicles': 0}
         self.latency_sum = self.queue_sum = 0.0
-        self.run_id = dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%S_%fZ')
+        self.run_id = dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%S_%fZ') + '_' + uuid4().hex[:8]
 
     def _start_sumo(self):
         sumo_home = Path(os.environ.get('SUMO_HOME', r'C:\Program Files (x86)\Eclipse\Sumo'))
@@ -206,11 +211,17 @@ class DemoSimulation:
         self.sim_time = conn.simulation.getTime()
         for vehicle_id in conn.simulation.getDepartedIDList():
             self.departure_times[vehicle_id] = self.sim_time
+            history = self.vehicle_history.setdefault(vehicle_id, {})
+            history['enteredAt'] = self.sim_time
         for vehicle_id in conn.simulation.getArrivedIDList():
+            history = self.vehicle_history.setdefault(vehicle_id, {})
+            history.update(present=False, leftAt=self.sim_time, arrivedAt=self.sim_time)
             if vehicle_id in self.departure_times:
                 self.trip_times.append(self.sim_time - self.departure_times.pop(vehicle_id))
         self.vehicles = []
         vehicle_ids = set(conn.vehicle.getIDList())
+        for vehicle_id in self.subscribed - vehicle_ids:
+            self.vehicle_history[vehicle_id].update(present=False, leftAt=self.sim_time)
         for vehicle_id in sorted(vehicle_ids - self.subscribed):
             conn.vehicle.subscribe(vehicle_id, self.vehicle_vars)
         self.subscribed = vehicle_ids
@@ -221,6 +232,9 @@ class DemoSimulation:
             self.vehicles.append({'id': vehicle_id, 'x': x, 'y': y,
                                   'angle': observed[angle_var], 'speed': observed[speed_var],
                                   'laneId': observed[lane_var]})
+            history = self.vehicle_history.setdefault(vehicle_id, {})
+            history.setdefault('firstSeen', self.sim_time)
+            history.update(present=True, lastSeen=self.sim_time, vehicle=dict(self.vehicles[-1]))
         self._read_signals()
         for vehicle in self.vehicles:
             for node_id, node in sorted(self.node_by_id.items()):
@@ -250,6 +264,8 @@ class DemoSimulation:
                 'x': vehicle['x'], 'y': vehicle['y'], 'laneId': vehicle['laneId'],
                 'created': self.sim_time, 'synthetic': True, **timing}
         self.tasks.append(task)
+        self.tasks_by_vehicle.setdefault(vehicle['id'], []).append(task)
+        self.task_by_id[task_id] = task
         self.metrics['sensed'] += 1
         self.metrics['offloaded'] += int(task['offloaded'])
         self.node_by_id[origin]['offloaded'] += int(task['offloaded'])
@@ -327,6 +343,10 @@ class DemoSimulation:
     def _event(self, event_type, text, rsu_id=None, task_id=None, **extra):
         event = {'id': len(self.events) + 1, 'time': self.sim_time, 'type': event_type,
                  'text': text, 'rsuId': rsu_id, 'taskId': task_id, **extra}
+        if task_id in self.task_by_id:
+            vehicle_id = self.task_by_id[task_id]['vehicleId']
+            event['vehicleId'] = vehicle_id
+            self.events_by_vehicle.setdefault(vehicle_id, []).append(event)
         self.events.append(event)
         if self.event_output:
             self.event_output.write(json.dumps(event, ensure_ascii=False) + '\n')
@@ -337,6 +357,36 @@ class DemoSimulation:
         status = ('done' if task.get('returned') else 'returning' if now >= task['finish'] else
                   'processing' if now >= task['start'] else 'queued' if now >= task['txEnd'] else 'transmitting')
         return dict(task, status=status)
+
+    def vehicle_trace(self, vehicle_id):
+        """Return only this vehicle's observed journey in the current run.
+
+        A departed vehicle retains its last observation and unfinished tasks.
+        Task status and control outcomes use the same observed state as export.
+        """
+        if (not isinstance(vehicle_id, str) or not vehicle_id.strip() or len(vehicle_id) > 256
+                or any(ord(char) < 32 or ord(char) == 127 for char in vehicle_id)):
+            raise ValueError('vehicle id must contain 1–256 characters and no control characters')
+        with self.lock:
+            history = self.vehicle_history.get(vehicle_id)
+            tasks = self.tasks_by_vehicle.get(vehicle_id, [])
+            status = ('present' if history.get('present') else 'departed') if history is not None else 'unknown'
+            completed = sum(bool(task.get('returned')) for task in tasks)
+            result = {'runId': self.run_id, 'simTime': self.sim_time, 'vehicleId': vehicle_id,
+                      'status': status, 'vehicle': history.get('vehicle') if history else None,
+                      'firstSeen': history.get('firstSeen') if history else None,
+                      'lastSeen': history.get('lastSeen') if history else None,
+                      'enteredAt': history.get('enteredAt') if history else None,
+                      'leftAt': history.get('leftAt') if history else None,
+                      'arrivedAt': history.get('arrivedAt') if history else None,
+                      'tasks': [self._task_view(task) for task in tasks],
+                      'events': self.events_by_vehicle.get(vehicle_id, []),
+                      'summary': {'sensed': len(tasks), 'completed': completed,
+                                  'offloaded': sum(bool(task['offloaded']) for task in tasks),
+                                  'pending': len(tasks) - completed}}
+            if status == 'unknown':
+                result['error'] = 'vehicle not observed in the current run'
+            return copy.deepcopy(result)
 
     def snapshot(self):
         with self.lock:

@@ -6,7 +6,7 @@ import mimetypes
 import threading
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import unquote, urlsplit
+from urllib.parse import parse_qs, unquote, urlsplit
 from simulation import DemoSimulation
 
 
@@ -14,7 +14,7 @@ def make_handler(simulation, root):
     root = Path(root).resolve()
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, fmt, *args):
-            if args and ('/api/state' in str(args[0]) or '/api/health' in str(args[0])):
+            if args and any(route in str(args[0]) for route in ('/api/state', '/api/health', '/api/vehicle')):
                 return
             super().log_message(fmt, *args)
 
@@ -33,13 +33,24 @@ def make_handler(simulation, root):
                 pass
 
         def do_GET(self):
-            route = urlsplit(self.path).path
+            parsed_url = urlsplit(self.path)
+            route = parsed_url.path
             if route == '/api/scene':
                 return self.send_json(simulation.scene)
             if route == '/api/state':
                 return self.send_json(simulation.snapshot())
             if route == '/api/health':
                 return self.send_json(simulation.health())
+            if route == '/api/vehicle':
+                try:
+                    query = parse_qs(parsed_url.query, keep_blank_values=True, errors='strict', max_num_fields=16)
+                    ids = query.get('id', [])
+                    if len(ids) != 1:
+                        raise ValueError('exactly one vehicle id is required')
+                    trace = simulation.vehicle_trace(ids[0])
+                except (ValueError, UnicodeError) as exc:
+                    return self.send_json({'error': str(exc)}, 400)
+                return self.send_json(trace, 404 if trace['status'] == 'unknown' else 200)
             if route == '/api/export':
                 return self.send_json(simulation.export(), download=True)
             if route.startswith('/api/'):

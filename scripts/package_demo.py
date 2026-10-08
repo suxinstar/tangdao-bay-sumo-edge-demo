@@ -6,7 +6,7 @@ root = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--portable', action='store_true', help='also include already-prepared _runtime binaries')
 args = parser.parse_args()
-version = '1.2.0'
+version = '1.3.0'
 prefix = 'TangdaoBay_3D_Demo'
 excluded_dirs = {'__pycache__', 'runs', 'qa', '.venv', '.git', 'downloads'}
 excluded_names = {'delivery_manifest.json', 'portable_manifest.json', 'package_verification.json', 'three-0.180.0.tgz'}
@@ -27,7 +27,7 @@ manifest_path = root / 'delivery_manifest.json'
 manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
 results = []
 for kind, files in [('Source', core), *([('Windows_x64', core + runtime)] if args.portable else [])]:
-    output = root.parent / f'TangdaoBay_3D_Demo_v1_2_0_{kind}.zip'
+    output = root.parent / f'TangdaoBay_3D_Demo_v{version.replace(".", "_")}_{kind}.zip'
     if output.exists(): raise SystemExit(f'Archive exists; choose a new version/name: {output.name}')
     check = manifest if kind == 'Source' else {'packageVersion': version, 'runtimeMode': 'offline-windows-x64', 'files': inventory(files + [manifest_path])}
     with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as z:

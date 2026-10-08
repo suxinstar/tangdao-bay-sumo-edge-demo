@@ -1,0 +1,62 @@
+{
+  "checkedAt": "2026-10-08T06:58:12.867Z",
+  "browser": "Codex in-app Chromium",
+  "viewportsChecked": [
+    [
+      1920,
+      1080
+    ],
+    [
+      1366,
+      768
+    ],
+    [
+      980,
+      720
+    ]
+  ],
+  "checks": {
+    "startFollowResumesAndLocks": true,
+    "manualVehicleSelection": true,
+    "canvasVehiclePicking": true,
+    "freeViewRetainsDossier": true,
+    "historicalTaskPinShowsMatchingDecision": true,
+    "desktopNoHorizontalOverflow": true,
+    "pausedFramesStable": true
+  },
+  "pausedObservationSeconds": 40.14,
+  "newRenderFrames": 0,
+  "observed": {
+    "at": 1791442692865,
+    "decision": "信号响应：匹配绿灯延长 4.0 s",
+    "diagnostics": {
+      "antialias": "false",
+      "calls": "39",
+      "effectLimit": "12",
+      "effectObjects": "2",
+      "effects": "1",
+      "effectsSkipped": "0",
+      "fps": "0.0",
+      "hidden": "false",
+      "labelUpdates": "5",
+      "layoutMeasurements": "0",
+      "pixelRatio": "0.85",
+      "polls": "58",
+      "pooledEffects": "1",
+      "quality": "light",
+      "renderFrames": "16",
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 730 (0x00004682) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "rendering": "idle",
+      "shadow": "false",
+      "triangles": "73429",
+      "vendor": "Google Inc. (Intel)"
+    },
+    "error": "",
+    "frames": 16,
+    "overflow": false,
+    "rendering": "idle",
+    "trace": "flow_coast_east.0 / T00014 · RSU_1 → RSU_2",
+    "vehicleId": "flow_coast_east.0"
+  },
+  "scope": "Observed actual local page with live SUMO backend. No fresh Edge or full-machine GPU benchmark. Earlier pre-upgrade fetch error excluded from current-page results."
+}
