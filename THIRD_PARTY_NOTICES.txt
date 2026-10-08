@@ -23,3 +23,10 @@ https://www.python.org/ftp/python/3.12.10/
 Public repository visibility does not replace the license terms of dependencies
 and map data. No additional open-source license is declared here for the original
 application code.
+
+Vehicle engine audio
+Racing car engine sound loops by domasx2 (OpenGameArt), CC0 1.0.
+https://opengameart.org/content/racing-car-engine-sound-loops
+https://creativecommons.org/publicdomain/zero/1.0/
+The distributed WAV, original link, license text and SHA-256 are preserved under web/audio/.
+This is a simulated audition, not a recording captured in Tangdao Bay.

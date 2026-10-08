@@ -6,7 +6,7 @@ root = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--portable', action='store_true', help='also include already-prepared _runtime binaries')
 args = parser.parse_args()
-version = '1.3.0'
+version = '1.4.0'
 prefix = 'TangdaoBay_3D_Demo'
 excluded_dirs = {'__pycache__', 'runs', 'qa', '.venv', '.git', 'downloads'}
 excluded_names = {'delivery_manifest.json', 'portable_manifest.json', 'package_verification.json', 'three-0.180.0.tgz'}

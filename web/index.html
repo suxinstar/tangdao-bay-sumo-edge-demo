@@ -19,7 +19,7 @@
     <section class="viewport" id="viewport" aria-label="可旋转缩放的三维交通场景">
       <div id="canvas-container"></div><div id="map-labels" aria-hidden="true"></div>
       <div class="scene-heading"><span class="scene-kicker">FIELD VIEW / 青岛 · 黄岛</span><h2 id="scene-name">唐岛湾北岸</h2><p>真实地理轮廓 <span>/</span> 模拟交通过程</p></div>
-      <nav class="map-tools" aria-label="三维场景控制"><button id="overview-button" title="查看全图">⌗ 全景</button><button id="focus-button" class="active" title="聚焦 RSU 部署区域">◎ 路口</button><label><input id="coverage-toggle" type="checkbox" checked><span>感知覆盖</span></label></nav>
+      <nav class="map-tools" aria-label="三维场景控制"><button id="overview-button" title="查看全图">⌗ 全景</button><button id="network-button" title="查看九个感知路口与主干道联动区域">▦ 多路口</button><button id="focus-button" class="active" title="聚焦 RSU 部署区域">◎ 路口</button><label><input id="coverage-toggle" type="checkbox" checked><span>感知覆盖</span></label></nav>
       <div class="scene-status"><span class="live-dot"></span><span id="scene-status-text">等待 SUMO 状态</span></div>
       <div class="render-controls"><label for="quality-select">画质 <select id="quality-select"><option value="light" selected>轻量 · 省资源</option><option value="standard">标准</option></select></label><span>仅影响显示，不改变仿真指标</span><details id="performance-diagnostics"><summary id="performance-summary">性能诊断 · 准备中</summary><p id="performance-details"></p></details></div>
       <div id="tracking-badge" class="tracking-badge" hidden><span class="tracking-icon" aria-hidden="true">⌖</span><div><small>VEHICLE LINK / 单车追踪</small><strong id="tracking-label">等待锁定车辆</strong></div></div>
@@ -47,6 +47,7 @@
         <div class="follow-actions"><button id="follow-toggle" class="secondary-button" title="让镜头重新跟随当前车辆">⌖ 恢复跟随</button><button id="follow-exit" class="secondary-button" title="解除镜头锁定，保留本车任务与流程记录">自由视角</button></div>
         <p id="follow-status" class="follow-status" role="status">尚未锁定车辆；开始演示将继续仿真并跟随选中车辆。</p><p class="follow-help">始终追踪同一辆车；驶离后保留记录。自由视角仅解除镜头锁定。</p>
         <div class="vehicle-metrics"><div><span>车辆 ID</span><strong id="vehicle-id">—</strong></div><div><span>当前车速</span><strong id="vehicle-speed">—</strong></div><div><span>所在道路</span><strong id="vehicle-road">—</strong></div><div><span>已完成 / 已感知</span><strong id="vehicle-task-count">0</strong></div></div>
+        <div id="vehicle-audio"></div>
         <div class="journey-summary"><span class="field-label">车辆进程</span><p id="vehicle-journey">跟随开启后，这里展示当前车辆的感知与计算进程。</p></div>
         <label class="field-label task-select-label" for="vehicle-task-select">本车任务 <span>选择后查看底部流程</span></label><select id="vehicle-task-select"><option value="">尚无感知任务</option></select>
         <div class="vehicle-signal-block"><span class="field-label">信号决策反馈</span><p id="vehicle-signal">计算结果回传后，查看该任务是否满足信号控制条件。</p></div>

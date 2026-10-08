@@ -8,6 +8,8 @@ from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, unquote, urlsplit
 from simulation import DemoSimulation
+from integration import ModelGateway
+from integration.http_acoustic import HttpAcousticProvider
 
 
 def make_handler(simulation, root):
@@ -19,7 +21,8 @@ def make_handler(simulation, root):
             super().log_message(fmt, *args)
 
         def send_json(self, payload, status=200, download=False):
-            data = json.dumps(payload, ensure_ascii=False, allow_nan=False).encode('utf-8')
+            data = payload if isinstance(payload, bytes) else json.dumps(
+                payload, ensure_ascii=False, allow_nan=False, separators=(',', ':')).encode('utf-8')
             self.send_response(status)
             self.send_header('Content-Type', 'application/json; charset=utf-8')
             self.send_header('Cache-Control', 'no-store')
@@ -38,7 +41,16 @@ def make_handler(simulation, root):
             if route == '/api/scene':
                 return self.send_json(simulation.scene)
             if route == '/api/state':
-                return self.send_json(simulation.snapshot())
+                try:
+                    query = parse_qs(parsed_url.query, keep_blank_values=True, errors='strict', max_num_fields=16)
+                    ids = query.get('vehicle', [])
+                    if len(ids) > 1:
+                        raise ValueError('at most one vehicle id is permitted')
+                    return self.send_json(simulation.snapshot_json(ids[0] if ids else None))
+                except (ValueError, UnicodeError) as exc:
+                    return self.send_json({'error': str(exc)}, 400)
+            if route == '/api/integration':
+                return self.send_json(simulation.integration_status())
             if route == '/api/health':
                 return self.send_json(simulation.health())
             if route == '/api/vehicle':
@@ -76,7 +88,7 @@ def make_handler(simulation, root):
 
         def do_POST(self):
             route = urlsplit(self.path).path
-            if route not in ('/api/control', '/api/shutdown'):
+            if route not in ('/api/control', '/api/shutdown', '/api/model/probe'):
                 return self.send_json({'error': 'unknown endpoint'}, 404)
             origin = self.headers.get('Origin')
             if origin:
@@ -98,6 +110,9 @@ def make_handler(simulation, root):
                 payload = json.loads(self.rfile.read(length))
                 if not isinstance(payload, dict):
                     raise ValueError('JSON object required')
+                if route == '/api/model/probe':
+                    result = simulation.submit_model_probe(payload)
+                    return self.send_json(result, 202 if result['accepted'] else 429)
                 return self.send_json(simulation.control(payload.get('action'), payload.get('value')))
             except (ValueError, TypeError, json.JSONDecodeError) as exc:
                 return self.send_json({'ok': False, 'error': str(exc)}, 400)
@@ -113,13 +128,22 @@ def main():
     parser.add_argument('--service-time', type=float, default=None, help='synthetic demo seconds, not measured device time')
     parser.add_argument('--max-time', type=float, default=900)
     parser.add_argument('--autostart', action='store_true', help='default is paused')
+    parser.add_argument('--model-endpoint', help='optional separate HTTP acoustic model; shadow evaluation only')
+    parser.add_argument('--model-token-env', help='name of an environment variable containing the model service token')
+    parser.add_argument('--model-timeout', type=float, default=1.0, help='wall-clock inference deadline in seconds (0.1–60)')
     args = parser.parse_args()
-    if not 1 <= args.port <= 65535 or (args.service_time is not None and args.service_time <= 0):
+    if (not 1 <= args.port <= 65535 or (args.service_time is not None and args.service_time <= 0)
+            or not 0.1 <= args.model_timeout <= 60):
         parser.error('invalid port or service time')
     root = Path(__file__).resolve().parent
+    gateway = None
+    if args.model_endpoint:
+        provider = HttpAcousticProvider(args.model_endpoint, timeout_s=args.model_timeout * 0.8,
+                                        token_env=args.model_token_env)
+        gateway = ModelGateway(provider, timeout_s=args.model_timeout)
     simulation = DemoSimulation(root, scheduler=args.scheduler, speed=args.speed,
                                 service_time=args.service_time, max_time=args.max_time,
-                                autostart=args.autostart)
+                                autostart=args.autostart, model_gateway=gateway)
     try:
         server = ThreadingHTTPServer((args.host, args.port), make_handler(simulation, root))
     except OSError:

@@ -1,0 +1,50 @@
+{
+  "version": "1.4.0",
+  "checkedAt": "2026-10-08T08:20:50.960347+00:00",
+  "checks": {
+    "backendUnitAndHttp": {
+      "passed": 27,
+      "failed": 0,
+      "evidence": "backend_tests.txt"
+    },
+    "frontendVehicleFollow": {
+      "passed": 25,
+      "failed": 0,
+      "evidence": "frontend_follow_checks.json"
+    },
+    "frontendPerformanceLogic": {
+      "passed": 16,
+      "failed": 0,
+      "evidence": "frontend_performance_checks.json",
+      "scope": "Historical 227-vehicle fixture plus current scene; mocked DOM/renderer, not GPU benchmark"
+    },
+    "audioLifecycle": {
+      "passed": 18,
+      "failed": 0,
+      "test": "tests/vehicle_audio.mjs",
+      "scope": "Mock Web Audio plus real asset integrity; browser decode/playback-graph verification is separate"
+    },
+    "sumoIntegration": {
+      "passed": 23,
+      "failed": 0,
+      "evidence": "sumo_integration.json"
+    },
+    "browserPlaybackAndPerformance": {
+      "evidence": [
+        "browser_audio_checks.json",
+        "live_follow_audio_1920.json",
+        "paused_idle.json"
+      ],
+      "scope": "IAB Chromium, Intel UHD 730; not a guarantee about Edge or physical audio output"
+    }
+  },
+  "sources": {
+    "web/app.js": "09da06da1f118c0d90e0fea6cfbf339d33328f41d797846bf3ff5bce9a28ef0c",
+    "web/index.html": "a7076474b9001c3bcf9812fe94e267d7ad46574bd1fcbcdb2b059450457e8bb9",
+    "web/style.css": "1df983e03d85f5d688642e1a2b6a48bf3ad3f76fb812733c60eef44dd4e35935",
+    "web/vehicle-audio.js": "19796031449a7674ef632fb203c67ad997476d283101ad5dba5eaf810fd03405",
+    "web/audio/engine-loop.wav": "69d74b106509037ce547429e4c3f9ae906b0fffe88d0bb8b3b5a8b0cfc239048",
+    "server.py": "2c22db15e295480b1c143282feeef239d3bc413a7c5270b0def0773b7346578d",
+    "simulation.py": "233b6f64f32f8bb2ca04b46ef2876c52edb3f89671107414f2a2415b157e16c1"
+  }
+}

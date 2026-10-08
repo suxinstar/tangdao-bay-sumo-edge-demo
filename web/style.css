@@ -5,6 +5,19 @@
   font-family:"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
   font-synthesis:none; color:var(--text); background:var(--bg); color-scheme:dark;
 }
+.vehicle-audio { margin:15px 0; padding:12px; background:#101b23; border:1px solid #365662; border-left:2px solid var(--blue) }
+.audio-heading,.audio-chart-label,.audio-controls { display:flex; align-items:center; justify-content:space-between; gap:7px }
+.audio-tag { color:var(--yellow); font:9px Consolas,"Microsoft YaHei",sans-serif; letter-spacing:1px }
+.audio-controls { margin-top:10px; flex-wrap:wrap }
+.audio-controls button { padding:8px; font-size:11px; min-height:31px }
+.audio-controls label { display:flex; align-items:center; gap:5px; color:#a9c1cd; font-size:10px }
+.audio-controls input[type=range] { width:67px; accent-color:var(--blue) }
+.audio-controls output { min-width:25px; font:10px Consolas,monospace }
+.audio-status { color:#c6dbe0; font-size:10px; line-height:1.6; min-height:16px; margin:10px 0 }
+.audio-chart-label { color:#a8c3cf; font:9px Consolas,"Microsoft YaHei",sans-serif; margin:9px 0 5px }
+.vehicle-audio canvas { display:block; width:100%; height:auto; background:#0a131b; border:1px solid #263b46 }
+.audio-source { color:#849ea9; font-size:9px; line-height:1.7; margin:9px 0 0 }
+.audio-source a { color:var(--blue) }
 * { box-sizing:border-box }
 body { margin:0; overflow:hidden }
 button,select,input,a { -webkit-tap-highlight-color:transparent }

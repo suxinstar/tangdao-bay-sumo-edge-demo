@@ -64,12 +64,11 @@ class VehicleTraceTests(unittest.TestCase):
     def test_history_retains_more_than_global_recent_limit_and_filters_other_vehicles(self):
         car = observed(self.sim)
         other = observed(self.sim, 'other')
+        self.sim._apply_control = lambda task: task.update(controlApplied=False, controlReason='当前非可延长绿灯')
         for _ in range(23):
             self.sim._sense(car, 'A')
             task = self.sim.tasks[-1]
-            task.update(returned=True, observedReturnTime=task['returnEnd'],
-                        controlApplied=False, controlReason='当前非可延长绿灯')
-            self.sim._event('signal_skip', '保持当前信号计划', 'A', task['id'], applied=False)
+            self.sim._complete(task)
         self.sim._sense(other, 'B')
         trace = self.sim.vehicle_trace(car['id'])
         self.assertEqual(trace['summary'], {'sensed': 23, 'completed': 23, 'offloaded': 12, 'pending': 0})

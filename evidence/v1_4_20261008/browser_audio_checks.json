@@ -1,0 +1,15 @@
+{
+  "waveformBrowserDecode": true,
+  "nonzeroPlayingLevelObserved": "-30.9 dBFS",
+  "pauseStopsAudio": true,
+  "freeCameraStopsAudio": true,
+  "normalizeDisplay": true,
+  "viewport4k": {
+    "cssWidth": 3840,
+    "cssHeight": 2160,
+    "bufferWidth": 1229,
+    "bufferHeight": 732,
+    "pixels": 899628
+  },
+  "limits": "Verified playback graph and UI states; physical speaker/headphone output is not independently heard or measured."
+}

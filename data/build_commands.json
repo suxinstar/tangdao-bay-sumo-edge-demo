@@ -1,6 +1,6 @@
 [
   [
-    "C:\\Program Files (x86)\\Eclipse\\Sumo\\bin\\netconvert.EXE",
+    "C:\\Users\\suchengxin\\Documents\\New project\\outputs\\TangdaoBay_3D_Demo_Delivery_20261001\\_runtime\\sumo-1.25.0\\bin\\netconvert.EXE",
     "--osm-files",
     "data/tangdao.osm.xml",
     "--output-file",
@@ -29,17 +29,19 @@
     "data/joined-junctions.xml"
   ],
   [
-    "C:\\Program Files (x86)\\Eclipse\\Sumo\\bin\\sumo.EXE",
+    "C:\\Users\\suchengxin\\Documents\\New project\\outputs\\TangdaoBay_3D_Demo_Delivery_20261001\\_runtime\\sumo-1.25.0\\bin\\sumo.EXE",
     "--version"
   ],
   [
-    "C:\\Program Files (x86)\\Eclipse\\Sumo\\bin\\sumo.EXE",
+    "C:\\Users\\suchengxin\\Documents\\New project\\outputs\\TangdaoBay_3D_Demo_Delivery_20261001\\_runtime\\sumo-1.25.0\\bin\\sumo.EXE",
     "-c",
     "scenario/tangdao.sumocfg",
     "--summary-output",
     "data/sumo_summary.xml",
     "--tripinfo-output",
     "data/tripinfo.xml",
+    "--edgedata-output",
+    "data/edge_traffic.xml",
     "--collision.action",
     "warn"
   ]

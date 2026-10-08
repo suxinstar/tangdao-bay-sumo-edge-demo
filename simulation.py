@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import copy
 import datetime as dt
+from collections import deque
+import heapq
 import json
 import math
 import os
@@ -19,9 +21,12 @@ import sys
 import threading
 import time
 from uuid import uuid4
+from integration import (AudioFrame, SyntheticPerception, SyntheticCompute, SyntheticTransport,
+                         LeastFinishScheduler, BoundedGreenPolicy, TraCISignalActuator)
 
 
-def reserve_task(nodes, origin, now, scheduler, work_factor=1.0):
+def reserve_task(nodes, origin, now, scheduler, work_factor=1.0, *,
+                 scheduler_provider=None, compute_provider=None, transport_provider=None):
     """Reserve one non-preemptive worker; existing dispatch reservations stay fixed."""
     candidates = []
     source = nodes[origin]
@@ -30,31 +35,30 @@ def reserve_task(nodes, origin, now, scheduler, work_factor=1.0):
             continue
         remote = node_id != origin
         distance = math.hypot(node['x'] - source['x'], node['y'] - source['y'])
-        transfer = 0.28 + distance / 1600.0 if remote else 0.04
-        return_time = 0.16 + distance / 2400.0 if remote else 0.04
+        transfer, return_time = (transport_provider or SyntheticTransport()).estimate_seconds(distance, remote=remote)
+        service = (compute_provider or SyntheticCompute()).estimate_seconds(node, work_factor)
+        if any(not math.isfinite(value) or value < 0 for value in (transfer, return_time, service)) or service == 0:
+            raise ValueError('transport and compute estimates must be finite and non-negative; compute must be positive')
         arrival = now + transfer
         start = max(arrival, node['available'])
-        finish = start + node['serviceTimeS'] * work_factor
-        candidates.append((finish, node_id != origin, node_id, arrival, start, return_time))
-    finish, remote, target, arrival, start, return_time = min(candidates)
-    nodes[target]['available'] = finish
-    return {'target': target, 'txEnd': arrival, 'start': start, 'finish': finish,
-            'returnEnd': finish + return_time, 'offloaded': remote}
+        finish = start + service
+        candidates.append({'target': node_id, 'txEnd': arrival, 'start': start,
+                           'finish': finish, 'returnEnd': finish + return_time, 'offloaded': remote})
+    target = (scheduler_provider or LeastFinishScheduler()).select([dict(item) for item in candidates], origin=origin, policy=scheduler)
+    selected = next((item for item in candidates if item['target'] == target), None)
+    if selected is None or (scheduler == 'local' and target != origin):
+        raise ValueError('scheduler returned an unavailable or forbidden compute node')
+    nodes[target]['available'] = selected['finish']
+    return selected
 
 
 def extension_decision(task, now, *, matching_green, has_yellow, already_extended,
                        spent, remaining, maximum_green=55.0, extension=4.0):
     """Pure safety gate: no result, no control; never request a phase transition."""
-    if now + 1e-8 < task['returnEnd']:
-        return None, '结果尚未返回'
-    if has_yellow or not matching_green:
-        return None, '检测车道当前非可延长绿灯'
-    if already_extended:
-        return None, '本绿相位已延长一次'
-    extra = min(extension, maximum_green - spent - remaining)
-    if extra <= 0.05:
-        return None, '已达本演示最大绿灯时长'
-    return remaining + extra, '已完成任务触发有界绿灯延长'
+    return BoundedGreenPolicy().decide(result_returned=now + 1e-8 >= task['returnEnd'],
+                                      matching_green=matching_green, has_yellow=has_yellow,
+                                      already_extended=already_extended, spent=spent, remaining=remaining,
+                                      maximum_green=maximum_green, extension=extension)
 
 
 class DemoSimulation:
@@ -64,13 +68,18 @@ class DemoSimulation:
     EXTENSION = 4.0
 
     def __init__(self, root, *, scheduler='least_finish', speed=1.0, autostart=False,
-                 service_time=None, max_time=900.0):
+                 service_time=None, max_time=900.0, model_gateway=None,
+                 scheduler_provider=None, compute_provider=None, transport_provider=None):
         self.root = Path(root).resolve()
         self.scene = json.loads((self.root / 'data/scene.json').read_text(encoding='utf-8'))
         self.scheduler = scheduler
         self.speed = float(speed)
         self.service_time = service_time
         self.max_time = float(max_time)
+        self.model_gateway = model_gateway
+        self.scheduler_provider = scheduler_provider or LeastFinishScheduler()
+        self.compute_provider = compute_provider or SyntheticCompute()
+        self.transport_provider = transport_provider or SyntheticTransport()
         self.lock = threading.RLock()
         self.stop_event = threading.Event()
         self.connection = None
@@ -92,6 +101,14 @@ class DemoSimulation:
         self.rng = random.Random(self.SEED)
         self.status, self.error, self.sim_time = 'paused', None, 0.0
         self.tasks, self.events, self.vehicles, self.signals = [], [], [], []
+        self.pending_tasks, self.return_heap, self.recent_completed = {}, [], []
+        self.recent_controls = deque()
+        self.model_results = deque(maxlen=16)
+        self._incoming_by_lane = None
+        self._snapshot_json_cache = None
+        self.intersection_positions = {item['id']: item for item in self.scene['intersections']}
+        self.perception_provider = SyntheticPerception()
+        self.signal_actuator = TraCISignalActuator()
         # Keep per-vehicle observations and task references for the journey API.
         # The global snapshot remains bounded; no extra simulation work is reserved.
         self.vehicle_history = {}
@@ -106,6 +123,7 @@ class DemoSimulation:
             self.node_by_id[node['id']] = node
         self.incoming, self.link_positions, self.tls_links = {}, {}, {}
         self.departure_times, self.trip_times = {}, []
+        self.trip_time_sum = 0.0
         self.metrics = {'sensed': 0, 'completed': 0, 'offloaded': 0, 'meanLatency': 0.0,
                         'meanQueueDelay': 0.0, 'signalActions': 0, 'signalRejected': 0,
                         'vehicles': 0, 'completedTrips': 0, 'meanTripTime': None,
@@ -183,6 +201,8 @@ class DemoSimulation:
                 'acousticModel': 'synthetic event and ideal lane observation from actual SUMO incoming-lane encounter; no WAV inference',
                 'serviceModel': 'demonstration service duration times seeded uniform[0.9,1.1]; not measured compute performance',
                 'signalModel': 'SUMO synthetic plan; extend matching active green only after returned task; never set phase index',
+                'modelIntegrationMode': 'shadow' if getattr(self, 'model_gateway', None) else 'not_configured',
+                'realModelControlsSignals': False,
                 'sumoVersion': getattr(self, 'sumo_version', None)}
 
     def start_background(self):
@@ -217,7 +237,9 @@ class DemoSimulation:
             history = self.vehicle_history.setdefault(vehicle_id, {})
             history.update(present=False, leftAt=self.sim_time, arrivedAt=self.sim_time)
             if vehicle_id in self.departure_times:
-                self.trip_times.append(self.sim_time - self.departure_times.pop(vehicle_id))
+                trip_time = self.sim_time - self.departure_times.pop(vehicle_id)
+                self.trip_times.append(trip_time)
+                self.trip_time_sum += trip_time
         self.vehicles = []
         vehicle_ids = set(conn.vehicle.getIDList())
         for vehicle_id in self.subscribed - vehicle_ids:
@@ -236,22 +258,36 @@ class DemoSimulation:
             history.setdefault('firstSeen', self.sim_time)
             history.update(present=True, lastSeen=self.sim_time, vehicle=dict(self.vehicles[-1]))
         self._read_signals()
+        if self._incoming_by_lane is None:
+            self._incoming_by_lane = {}
+            for node_id in sorted(self.node_by_id):
+                for lane_id in self.incoming[node_id]:
+                    self._incoming_by_lane.setdefault(lane_id, []).append(node_id)
         for vehicle in self.vehicles:
-            for node_id, node in sorted(self.node_by_id.items()):
+            for node_id in self._incoming_by_lane.get(vehicle['laneId'], ()):
+                node = self.node_by_id[node_id]
                 key = (vehicle['id'], node_id)
-                if key in self.seen or vehicle['laneId'] not in self.incoming[node_id]:
+                if key in self.seen:
                     continue
                 if math.hypot(vehicle['x'] - node['x'], vehicle['y'] - node['y']) <= node['sensingRadiusM']:
                     self.seen.add(key)
                     self._sense(vehicle, node_id)
-        for task in self.tasks:
-            if not task.get('returned') and self.sim_time + 1e-8 >= task['returnEnd']:
-                self._complete(task)
-        self._read_signals()
+        due = []
+        while self.return_heap and self.return_heap[0][0] <= self.sim_time + 1e-8:
+            _, task_id = heapq.heappop(self.return_heap)
+            task = self.pending_tasks.get(task_id)
+            if task is not None:
+                due.append(task)
+        # Preserve dispatch-order control checks for results observed in the same step.
+        for task in sorted(due, key=lambda item: item['id']):
+            self._complete(task)
+        if self.event_output:
+            self.event_output.flush()
         self.metrics.update(vehicles=len(self.vehicles), completedTrips=len(self.trip_times),
-                            meanTripTime=sum(self.trip_times) / len(self.trip_times) if self.trip_times else None,
+                            meanTripTime=self.trip_time_sum / len(self.trip_times) if self.trip_times else None,
                             haltingVehicles=sum(v['speed'] < 0.1 for v in self.vehicles))
-        if self.sim_time >= self.max_time or (conn.simulation.getMinExpectedNumber() == 0 and all(t.get('returned') for t in self.tasks)):
+        self._collect_model_results()
+        if self.sim_time >= self.max_time or (conn.simulation.getMinExpectedNumber() == 0 and not self.pending_tasks):
             self.status = 'finished'
             self._event('finished', '本轮仿真结束，可导出日志或重置')
             self._write_export()
@@ -259,11 +295,18 @@ class DemoSimulation:
     def _sense(self, vehicle, origin):
         task_id = f'T{len(self.tasks) + 1:05d}'
         timing = reserve_task(self.node_by_id, origin, self.sim_time,
-                              self.scheduler, self.rng.uniform(0.9, 1.1))
+                              self.scheduler, self.rng.uniform(0.9, 1.1),
+                              scheduler_provider=getattr(self, 'scheduler_provider', None),
+                              compute_provider=getattr(self, 'compute_provider', None),
+                              transport_provider=getattr(self, 'transport_provider', None))
+        observation = self.perception_provider.infer(AudioFrame(
+            self.run_id, vehicle['id'], origin, self.sim_time, vehicle['laneId'], vehicle['speed']))
         task = {'id': task_id, 'vehicleId': vehicle['id'], 'origin': origin,
                 'x': vehicle['x'], 'y': vehicle['y'], 'laneId': vehicle['laneId'],
-                'created': self.sim_time, 'synthetic': True, **timing}
+                'created': self.sim_time, 'synthetic': True, 'perception': observation.to_dict(), **timing}
         self.tasks.append(task)
+        self.pending_tasks[task_id] = task
+        heapq.heappush(self.return_heap, (task['returnEnd'], task_id))
         self.tasks_by_vehicle.setdefault(vehicle['id'], []).append(task)
         self.task_by_id[task_id] = task
         self.metrics['sensed'] += 1
@@ -274,7 +317,13 @@ class DemoSimulation:
                     task=copy.deepcopy(task))
 
     def _complete(self, task):
+        if task.get('returned'):
+            return
         task['returned'] = True
+        self.pending_tasks.pop(task['id'], None)
+        heapq.heappush(self.recent_completed, (task['id'], task))
+        if len(self.recent_completed) > 10:
+            heapq.heappop(self.recent_completed)
         task['observedReturnTime'] = self.sim_time
         self.metrics['completed'] += 1
         self.node_by_id[task['target']]['completed'] += 1
@@ -302,8 +351,9 @@ class DemoSimulation:
         task['controlCheckedTime'] = self.sim_time
         task['controlApplied'], task['controlReason'] = duration is not None, reason
         if duration is not None:
-            domain.setPhaseDuration(tls, duration)
+            self.signal_actuator.extend(domain, tls, duration)
             self.extended.add(epoch)
+            self.recent_controls.append(task)
             self.metrics['signalActions'] += 1
             task['controlTls'], task['extensionS'] = tls, duration - remaining
             text = f'{task["id"]} 返回 → {tls} 当前绿灯延长 {duration - remaining:.1f} 秒'
@@ -318,11 +368,17 @@ class DemoSimulation:
                         phase=phase, laneId=task['laneId'], returnEnd=task['returnEnd'],
                         beforeState=state, matchingGreen=matching, phaseEpoch=epoch[1])
         self.last_action[tls] = text
+        for signal in self.signals:
+            if signal['id'] == tls:
+                signal['lastAction'] = text
+                if duration is not None:
+                    signal.update(remaining=duration, mode='extended')
+                break
 
     def _read_signals(self):
         if not hasattr(self, 'last_action'):
             self.last_action = {}
-        positions = {x['id']: x for x in self.scene['intersections']}
+        positions = self.intersection_positions
         self.signals = []
         domain = self.connection.trafficlight
         for tls in sorted(self.tls_links):
@@ -350,7 +406,6 @@ class DemoSimulation:
         self.events.append(event)
         if self.event_output:
             self.event_output.write(json.dumps(event, ensure_ascii=False) + '\n')
-            self.event_output.flush()
 
     def _task_view(self, task):
         now = self.sim_time
@@ -358,7 +413,7 @@ class DemoSimulation:
                   'processing' if now >= task['start'] else 'queued' if now >= task['txEnd'] else 'transmitting')
         return dict(task, status=status)
 
-    def vehicle_trace(self, vehicle_id):
+    def vehicle_trace(self, vehicle_id, *, _copy=True):
         """Return only this vehicle's observed journey in the current run.
 
         A departed vehicle retains its last observation and unfinished tasks.
@@ -386,24 +441,29 @@ class DemoSimulation:
                                   'pending': len(tasks) - completed}}
             if status == 'unknown':
                 result['error'] = 'vehicle not observed in the current run'
-            return copy.deepcopy(result)
+            return copy.deepcopy(result) if _copy else result
 
-    def snapshot(self):
+    def snapshot(self, vehicle_id=None, *, _copy=True):
         with self.lock:
-            active = [t for t in self.tasks if not t.get('returned')]
-            recent = [t for t in self.tasks if t.get('returned')][-10:]
+            active = list(self.pending_tasks.values())
+            recent = [task for _, task in sorted(self.recent_completed)]
             active_views = [self._task_view(t) for t in active]
             moving_views = [t for t in active_views if t['status'] != 'queued']
             queue_views = [t for t in active_views if t['status'] == 'queued']
             views = [self._task_view(t) for t in recent] + moving_views + queue_views[:max(0, 90 - len(moving_views))]
+            node_load = {node_id: {'queue': 0, 'busy': False} for node_id in self.node_by_id}
+            for task in active_views:
+                if task['status'] == 'queued':
+                    node_load[task['target']]['queue'] += 1
+                elif task['status'] == 'processing':
+                    node_load[task['target']]['busy'] = True
             nodes = []
             for node_id, node in self.node_by_id.items():
-                queue = sum(t['target'] == node_id and t['txEnd'] <= self.sim_time < t['start'] for t in active)
-                busy = any(t['target'] == node_id and t['start'] <= self.sim_time < t['finish'] for t in active)
-                nodes.append({'id': node_id, 'queue': queue, 'busy': busy, 'completed': node['completed'],
+                nodes.append({'id': node_id, **node_load[node_id], 'completed': node['completed'],
                               'offloaded': node['offloaded'], 'serviceTimeS': node['serviceTimeS']})
-            applied = [t for t in self.tasks if t.get('controlApplied') and self.sim_time - t.get('controlCheckedTime', 0) < 7]
-            selected = applied[-1] if applied else active[0] if active else self.tasks[-1] if self.tasks else None
+            while self.recent_controls and self.sim_time - self.recent_controls[0].get('controlCheckedTime', 0) >= 7:
+                self.recent_controls.popleft()
+            selected = self.recent_controls[-1] if self.recent_controls else active[0] if active else self.tasks[-1] if self.tasks else None
             trace = {'taskId': None, 'stages': []}
             if selected:
                 if not any(t['id'] == selected['id'] for t in views):
@@ -413,10 +473,73 @@ class DemoSimulation:
                          'stages': [{'key': 'sense', 'state': 'done'}, {'key': 'dispatch', 'state': 'done'},
                                     {'key': 'compute', 'state': 'done' if self.sim_time >= selected['finish'] else 'active' if self.sim_time >= selected['start'] else 'waiting'},
                                     {'key': 'signal', 'state': 'done' if selected.get('returned') else 'waiting'}]}
-            return copy.deepcopy({'status': self.status, 'simTime': self.sim_time, 'speed': self.speed,
+            result = {'status': self.status, 'simTime': self.sim_time, 'speed': self.speed,
                                   'scheduler': self.scheduler, 'error': self.error, 'runId': self.run_id,
                                   'vehicles': self.vehicles, 'signals': self.signals, 'rsus': nodes, 'tasks': views,
-                                  'events': self.events[-60:], 'metrics': self.metrics, 'trace': trace})
+                                  'events': self.events[-60:], 'metrics': self.metrics, 'trace': trace}
+            if vehicle_id is not None:
+                result['vehicleTrace'] = self.vehicle_trace(vehicle_id, _copy=False)
+            return copy.deepcopy(result) if _copy else result
+
+    def snapshot_json(self, vehicle_id=None):
+        """Serialize once while holding the state lock; avoid deepcopy before HTTP JSON.
+
+        The cache keeps only one immutable response, so switching selected cars
+        cannot accumulate snapshots. Public snapshot()/vehicle_trace() still copy.
+        """
+        with self.lock:
+            key = (self.run_id, self.sim_time, self.status, self.error, self.speed,
+                   self.scheduler, len(self.tasks), len(self.events), vehicle_id)
+            if self._snapshot_json_cache and self._snapshot_json_cache[0] == key:
+                return self._snapshot_json_cache[1]
+            raw = json.dumps(self.snapshot(vehicle_id, _copy=False), ensure_ascii=False,
+                             allow_nan=False, separators=(',', ':')).encode('utf-8')
+            self._snapshot_json_cache = (key, raw)
+            return raw
+
+    def _collect_model_results(self):
+        gateway = getattr(self, 'model_gateway', None)
+        if gateway:
+            self.model_results.extend(gateway.drain(self.run_id))
+
+    def integration_status(self):
+        with self.lock:
+            self._collect_model_results()
+            gateway = getattr(self, 'model_gateway', None)
+            return {'perception': {'provider': 'SyntheticPerception', 'source': 'sumo_ideal_lane_observation',
+                                   'synthetic': True, 'actualAudioInference': False},
+                    'compute': {'provider': type(getattr(self, 'compute_provider', SyntheticCompute())).__name__,
+                                'source': 'configured_demo_service_seconds', 'measured': False},
+                    'scheduler': {'provider': type(getattr(self, 'scheduler_provider', LeastFinishScheduler())).__name__},
+                    'transport': {'provider': type(getattr(self, 'transport_provider', SyntheticTransport())).__name__,
+                                  'measured': False},
+                    'signal': {'provider': 'TraCISignalActuator', 'target': 'local_SUMO', 'physicalDevice': False},
+                    'modelGateway': gateway.status() if gateway else {'configured': False, 'mode': 'shadow',
+                                                                    'usedForSignalControl': False},
+                    'recentModelResults': copy.deepcopy(list(self.model_results))}
+
+    def submit_model_probe(self, payload):
+        """Optional, explicit audio reference submission; never blocks SUMO for inference."""
+        with self.lock:
+            gateway = getattr(self, 'model_gateway', None)
+            if gateway is None:
+                raise ValueError('real model is not configured; start server with --model-endpoint')
+            vehicle_id, rsu_id, audio_ref = payload.get('vehicleId'), payload.get('rsuId'), payload.get('audioRef')
+            history = self.vehicle_history.get(vehicle_id) if isinstance(vehicle_id, str) else None
+            if not history or not history.get('vehicle') or rsu_id not in self.node_by_id:
+                raise ValueError('model probe requires a known current-run vehicle and RSU')
+            if (not isinstance(audio_ref, str) or not audio_ref.strip() or len(audio_ref) > 2048
+                    or any(ord(char) < 32 for char in audio_ref)):
+                raise ValueError('audioRef must identify a supplied audio file or service object')
+            rate, channels = payload.get('sampleRateHz'), payload.get('channels')
+            if rate is not None and (type(rate) is not int or not 8000 <= rate <= 192000):
+                raise ValueError('sampleRateHz must be an integer in [8000, 192000]')
+            if channels is not None and (type(channels) is not int or not 1 <= channels <= 32):
+                raise ValueError('channels must be an integer in [1, 32]')
+            vehicle = history['vehicle']
+            frame = AudioFrame(self.run_id, vehicle_id, rsu_id, self.sim_time, vehicle['laneId'],
+                               vehicle['speed'], audio_ref, rate, channels, 'supplied_audio_reference')
+            return gateway.submit(frame)
 
     def control(self, action, value=None):
         with self.lock:
@@ -467,6 +590,7 @@ class DemoSimulation:
             return copy.deepcopy({'configuration': self._configuration(), 'sceneMetadata': self.scene['meta'],
                                   'simTime': self.sim_time, 'status': self.status, 'metrics': self.metrics,
                                   'tasks': [self._task_view(t) for t in self.tasks], 'events': self.events,
+                                  'modelIntegration': self.integration_status(),
                                   'limitations': ['真实 OSM 地图与 SUMO 车辆运动；非真实道路交通观测',
                                                   '合成声学事件与理想车道观测；未执行 WAV 定位模型',
                                                   '排队、服务和传输时间均为演示设定；非设备测量',
@@ -504,3 +628,6 @@ class DemoSimulation:
         with self.lock:
             self._write_export()
             self._close_sumo()
+        gateway = getattr(self, 'model_gateway', None)
+        if gateway:
+            gateway.close()

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "verifiedOn": "2026-10-08",
+  "assets": [
+    {
+      "file": "engine-loop.wav",
+      "title": "racing car engine sound loops — loop_0.wav",
+      "author": "domasx2",
+      "sourcePage": "https://opengameart.org/content/racing-car-engine-sound-loops",
+      "downloadUrl": "https://opengameart.org/sites/default/files/loop_0.wav",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "licenseFile": "CC0-1.0.txt",
+      "sha256": "69d74b106509037ce547429e4c3f9ae906b0fffe88d0bb8b3b5a8b0cfc239048",
+      "channels": 1,
+      "sampleRateHz": 44100,
+      "sampleFormat": "PCM signed 16-bit little-endian",
+      "frames": 38106,
+      "durationSeconds": 0.8640816326530613,
+      "fileModifications": "Renamed only; the downloaded WAV bytes are unchanged.",
+      "runtimeProcessing": "18 ms loop seam crossfade in the decoded buffer; variable playback rate, low-pass filter and gain driven by simulated SUMO vehicle speed.",
+      "provenanceNote": "The current source page declares CC0 and describes remaking the loop from a public-domain pdsounds sample. Its author comment dated 2011-07-24 confirms the public-domain remake. Historical comments on an earlier replaced source remain on that page.",
+      "usageBoundary": "Demonstration playback only. It is not a Tangdao Bay microphone recording, a recording of the tracked SUMO vehicle, a validated physical sound model, or an input to real acoustic recognition."
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries } from '/vendor/BufferGeometryUtils.js';
+import { VehicleAudio } from '/vehicle-audio.js';
 
 const $ = id => document.getElementById(id);
 const UI = { container:$('canvas-container'), viewport:$('viewport'), loading:$('loading'), message:$('loading-message'), error:$('error-banner') };
@@ -15,9 +16,11 @@ const rsuObjects=new Map(), signalObjects=new Map(), effects=new Map(), labels=[
 const carParts=[], dummy=new THREE.Object3D(), quaternion=new THREE.Quaternion(), scaleOne=new THREE.Vector3(1,1,1);
 const axisY=new THREE.Vector3(0,1,0), projected=new THREE.Vector3();
 const layers={};
-const QUALITY={light:{fps:24,dpr:.85,effects:12,pollMs:500,labelMs:180},standard:{fps:30,dpr:1,effects:24,pollMs:400,labelMs:120}};
+const QUALITY={light:{fps:24,dpr:.85,pixels:900000,effects:12,pollMs:500,labelMs:250},standard:{fps:30,dpr:1,pixels:1800000,effects:24,pollMs:500,labelMs:180}};
 let quality='light',frameTimer=null,frameRequest=0,lastFrameAt=0,labelsDirty=true,lastLabelsAt=0,renderDirty=true,snapshotVersion=0,lastCarVersion=-1,lastCarT=-1,resizeObserver=null;
 let oldVehicles=new Map(),cachedCars=[],candidateTasks=[],effectPool=[],stateAbort=null,interpolationMs=450;
+let renderedCars=[],carViewDirty=true,carColorKey='',vehicleAudio=null,connectionHealthy=false,audioHold=false,controlBusy=false,controlEpoch=0,adaptiveScale=1,frameCostEMA=0,slowFrames=0,lastAutoQualityAt=0;
+const carCullSphere=new THREE.Sphere(new THREE.Vector3(),5);
 const carPosition=new THREE.Vector3(),carPalette=[0xf3f4ef,0xc7e0e7,0xf5bd76,0x6b9caa,0x4d7489,0xe6ecec].map(c=>new THREE.Color(c));
 const viewFrustum=new THREE.Frustum(),viewMatrix=new THREE.Matrix4(),effectPoint=new THREE.Vector3(),effectSphere=new THREE.Sphere();
 const sharedEffects={wave:new THREE.RingGeometry(.84,1,32),packet:new THREE.OctahedronGeometry(2,0)};
@@ -30,26 +33,29 @@ const followTrailPoints=[],followPoint=new THREE.Vector3(),followDelta=new THREE
 const selectedCarColor=new THREE.Color(0xf4f449),raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
 
 function hash(str){let h=2166136261;for(const c of String(str)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+function renderPixelRatio(width,height){const q=QUALITY[quality];return Math.min(window.devicePixelRatio||1,q.dpr,Math.sqrt(q.pixels/Math.max(1,width*height)))*adaptiveScale}
+function applyRenderSize(){renderer.setPixelRatio(renderPixelRatio(UI.container.clientWidth,UI.container.clientHeight));renderer.setSize(UI.container.clientWidth,UI.container.clientHeight,false)}
+function syncVehicleAudio(){vehicleAudio?.update({vehicle:currentVehicle(),running:connectionHealthy&&!audioHold&&latest?.status==='running',hidden:document.hidden,following:follow.enabled,task:latest&&follow.id?taskForView(latest):null,simTime:latest?.simTime||0})}
 function pos(x,y,z=0){return new THREE.Vector3(number(x)-center.x,z,-(number(y)-center.y))}
 function material(color,extra={}){const {roughness,metalness,...options}=extra;return new THREE.MeshLambertMaterial({color,...options})}
 function box(parent,size,xyz,mat){const o=new THREE.Mesh(new THREE.BoxGeometry(...size),mat);o.position.set(...xyz);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
 function ring(parent,r,color,opacity=.3,width=1){const m=new THREE.Mesh(new THREE.RingGeometry(Math.max(.01,r-width),r,72),new THREE.MeshBasicMaterial({color,transparent:true,opacity,side:THREE.DoubleSide,depthWrite:false}));m.rotation.x=-Math.PI/2;parent.add(m);return m}
 function status(message,kind='connected'){const e=$('connection');e.className='connection '+kind;e.replaceChildren();e.append(document.createElement('i'),document.createTextNode(message))}
 function showError(text){UI.error.hidden=!text;UI.error.textContent=text||''}
-async function jsonFetch(url,options={}){const controller=new AbortController();if(url==='/api/state')stateAbort=controller;if(url.startsWith('/api/vehicle?'))vehicleAbort=controller;const timer=setTimeout(()=>controller.abort(),9000);try{const response=await fetch(url,{cache:'no-store',...options,signal:controller.signal});if(!response.ok){let detail='';try{detail=(await response.json()).error||''}catch{}throw new Error(detail||`HTTP ${response.status}`)}return await response.json()}finally{clearTimeout(timer);if(stateAbort===controller)stateAbort=null;if(vehicleAbort===controller)vehicleAbort=null}}
+async function jsonFetch(url,options={}){const controller=new AbortController();if(url.startsWith('/api/state'))stateAbort=controller;if(url.startsWith('/api/vehicle?'))vehicleAbort=controller;const timer=setTimeout(()=>controller.abort(),9000);try{const response=await fetch(url,{cache:'no-store',...options,signal:controller.signal});if(!response.ok){let detail='';try{detail=(await response.json()).error||''}catch{}throw new Error(detail||`HTTP ${response.status}`)}return await response.json()}finally{clearTimeout(timer);if(stateAbort===controller)stateAbort=null;if(vehicleAbort===controller)vehicleAbort=null}}
 
 function setupThree(){
-  try{renderer=new THREE.WebGLRenderer({antialias:false,alpha:false,powerPreference:'default'});}catch(error){throw new Error('浏览器无法创建 WebGL 三维画面。请启用硬件加速，或换用支持 WebGL 的 Edge / Chrome。'+error.message)}
+  try{renderer=new THREE.WebGLRenderer({antialias:false,alpha:false,powerPreference:'high-performance'});}catch(error){throw new Error('浏览器无法创建 WebGL 三维画面。请启用硬件加速，或换用支持 WebGL 的 Edge / Chrome。'+error.message)}
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,QUALITY[quality].dpr));renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;renderer.shadowMap.enabled=false;
   UI.container.append(renderer.domElement);
   world=new THREE.Scene();world.background=new THREE.Color(0x0c1720);world.fog=new THREE.Fog(0x0c1720,1900,5500);
   camera=new THREE.PerspectiveCamera(42,1,.8,15000);controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=false;controls.minDistance=32;controls.maxDistance=6500;controls.maxPolarAngle=Math.PI*.465;controls.minPolarAngle=.12;controls.screenSpacePanning=false;controls.target.set(0,0,0);
-  controls.addEventListener('start',()=>{cameraMove=null});controls.addEventListener('change',()=>{labelsDirty=true;requestRender()});
+  controls.addEventListener('start',()=>{cameraMove=null});controls.addEventListener('change',()=>{labelsDirty=true;carViewDirty=true;requestRender()});
   world.add(new THREE.HemisphereLight(0xadc8ec,0x29394a,2.1));const sun=new THREE.DirectionalLight(0xc5e4ed,1.8);sun.position.set(-450,750,350);sun.castShadow=false;world.add(sun);layers.sun=sun;
   for(const name of ['map','rsu','signals','vehicles','effects']){layers[name]=new THREE.Group();world.add(layers[name])}
-  const resize=()=>{const w=UI.container.clientWidth,h=UI.container.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(sceneData&&$('overview-button').classList.contains('active'))overview(false);labelsDirty=true;requestRender()};resizeObserver=new ResizeObserver(resize);resizeObserver.observe(UI.container);resize();
-  renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();stopped=true;stopFrames();clearTimeout(retryTimer);stateAbort?.abort();showError('三维图形上下文暂时丢失。请重新加载页面恢复；后端仿真仍可能在运行。')});
+  const resize=()=>{const w=UI.container.clientWidth,h=UI.container.clientHeight;if(!w||!h)return;applyRenderSize();camera.aspect=w/h;camera.updateProjectionMatrix();if(sceneData&&($('overview-button').classList.contains('active')||$('network-button').classList.contains('active')))overview(false,$('network-button').classList.contains('active'));labelsDirty=true;carViewDirty=true;requestRender()};resizeObserver=new ResizeObserver(resize);resizeObserver.observe(UI.container);resize();
+  renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();stopped=true;connectionHealthy=false;stopFrames();clearTimeout(retryTimer);stateAbort?.abort();vehicleAudio?.update({running:false,following:false});showError('三维图形上下文暂时丢失。请重新加载页面恢复；后端仿真仍可能在运行。')});
 }
 
 function addMerged(geometries,mat,parent=layers.map){if(!geometries.length)return null;const geo=mergeGeometries(geometries,false);for(const g of geometries)g.dispose();if(!geo)return null;const mesh=new THREE.Mesh(geo,mat);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh}
@@ -68,9 +74,9 @@ function buildMap(data){
   const named=new Map();for(const road of roads){if(!road.name||String(road.id).startsWith(':'))continue;const old=named.get(road.name);if(!old||(road.shape?.length||0)>(old.shape?.length||0))named.set(road.name,road)}
   for(const road of [...named.values()].slice(0,35)){const point=road.shape[Math.floor(road.shape.length/2)];if(!point)continue;addLabel(road.name,pos(point[0],point[1],5),'road-label','road')}
   for(const rsu of data.rsus||[])createRSU(rsu);for(const intersection of data.intersections||[])createSignal(intersection);
-  createCars();createFollowVisuals();$('scene-name').textContent=data.meta?.name||'唐岛湾北岸';$('rsu-count').textContent=`${(data.rsus||[]).length} 个 RSU`;
+  createCars();createFollowVisuals();$('scene-name').textContent='唐岛湾北岸 · '+(data.rsus||[]).length+' 路口';$('scene-name').title=data.meta?.name||'唐岛湾北岸';$('rsu-count').textContent=`${(data.rsus||[]).length} 个 RSU`;
   const notes=[`地图来源：${data.meta?.source||'OpenStreetMap'}；许可：${data.meta?.license||'ODbL 1.0'}。`,...(data.meta?.notes||[])];const assumed=(data.buildings||[]).filter(v=>!v.heightSource||v.heightSource==='assumed').length;notes.push(`共 ${data.buildings?.length||0} 栋建筑轮廓，其中 ${assumed} 栋采用示意高度。RSU阵列约14m高，车辆、灯组与光效采用便于观察的程序化示意比例；位置遵循仿真坐标，不表示实际设备尺寸或安装形制。灯色按后端受控连接 linkIndex 映射，立杆横向位置为示意。`);$('metadata-notes').textContent=notes.join(' ');
-  buildRsuCards();focusScene(false);
+  buildRsuCards();overview(false,true);
 }
 
 function addLabel(text,point,className,kind,id=null){const el=document.createElement('div');el.className=className;el.textContent=text;let leader=null;if(kind==='rsu'){leader=document.createElement('div');leader.style.cssText='position:absolute;height:1px;background:#276981aa;transform-origin:0 0;pointer-events:none;display:none';$('map-labels').append(leader)}$('map-labels').append(el);const item={el,point,kind,id,leader};labels.push(item);return el}
@@ -102,7 +108,18 @@ function flushSignalBatch(){if(!signalBatch.dirty)return;addMerged(signalBatch.p
 function createCars(){
   const definitions=[{g:new THREE.BoxGeometry(1.95,.72,4.5),offset:[0,.88,0],mat:material(0xffffff,{metalness:.2,roughness:.42}),body:true},{g:new THREE.BoxGeometry(1.64,.66,2.5),offset:[0,1.55,.12],mat:material(0xb7d3da,{metalness:.35,roughness:.25})},{g:new THREE.BoxGeometry(1.54,.5,.08),offset:[0,1.59,-1.15],mat:material(0x294953,{metalness:.4,roughness:.2})},{g:new THREE.BoxGeometry(1.54,.45,.08),offset:[0,1.57,1.4],mat:material(0x34545e,{metalness:.4,roughness:.2})},{g:new THREE.BoxGeometry(1.55,.17,.09),offset:[0,.99,-2.28],mat:material(0xfff0c0,{emissive:0xfde5a0,emissiveIntensity:.25})},{g:new THREE.BoxGeometry(1.6,.17,.09),offset:[0,.99,2.28],mat:material(0xb42635,{emissive:0xf13934,emissiveIntensity:.18})}];
   for(const x of [-1.0,1.0])for(const z of [-1.42,1.42]){const g=new THREE.CylinderGeometry(.44,.44,.27,8);g.rotateZ(Math.PI/2);definitions.push({g,offset:[x,.5,z],mat:material(0x253238)})}
-  for(const def of definitions){const mesh=new THREE.InstancedMesh(def.g,def.mat,2000);mesh.count=0;mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);mesh.castShadow=true;mesh.frustumCulled=false;layers.vehicles.add(mesh);carParts.push({...def,mesh})}
+  // Bake the fixed offsets into two geometries. One transform per visible car,
+  // not ten transforms/uploads for every vehicle in the entire simulation.
+  const details=[];
+  for(const def of definitions){def.g.translate(...def.offset);if(def.body)continue;
+    const g=def.g.index?def.g.toNonIndexed():def.g.clone(),color=def.mat.color,colors=new Float32Array(g.attributes.position.count*3);
+    for(let i=0;i<colors.length;i+=3){colors[i]=color.r;colors[i+1]=color.g;colors[i+2]=color.b}
+    g.setAttribute('color',new THREE.BufferAttribute(colors,3));details.push(g);def.g.dispose();def.mat.dispose();
+  }
+  const merged=mergeGeometries(details,false);for(const g of details)g.dispose();
+  for(const def of [definitions[0],{g:merged,mat:material(0xffffff,{vertexColors:true}),body:false}]){
+    const mesh=new THREE.InstancedMesh(def.g,def.mat,2000);mesh.count=0;mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);mesh.frustumCulled=false;layers.vehicles.add(mesh);carParts.push({...def,mesh});
+  }
 }
 function interpolateAngle(a,b,t){return a+((((b-a)%360)+540)%360-180)*t}
 function cacheSnapshot(){
@@ -112,7 +129,20 @@ function cacheSnapshot(){
   if(follow.armed){const v=chooseDemoVehicle();if(v)selectVehicle(v.id)}
   recordFollowPose();
 }
-function updateCars(t){if(!latest||(lastCarVersion===snapshotVersion&&lastCarT===t))return;lastCarVersion=snapshotVersion;lastCarT=t;let i=0;for(const cached of cachedCars){const v=cached.current,p=cached.previous;const x=THREE.MathUtils.lerp(number(p.x),number(v.x),t),y=THREE.MathUtils.lerp(number(p.y),number(v.y),t),a=interpolateAngle(number(p.angle),number(v.angle),t);carPosition.set(x-center.x,0,-(y-center.y));quaternion.setFromAxisAngle(axisY,-a*DEG);for(const part of carParts){dummy.position.set(...part.offset).applyQuaternion(quaternion).add(carPosition);dummy.quaternion.copy(quaternion);dummy.scale.set(1,1,1);dummy.updateMatrix();part.mesh.setMatrixAt(i,dummy.matrix)}i++}for(const part of carParts){part.mesh.count=i;part.mesh.instanceMatrix.clearUpdateRanges();part.mesh.instanceMatrix.addUpdateRange(0,i*16);part.mesh.instanceMatrix.needsUpdate=true}}
+function updateCars(t){
+  if(!latest||(lastCarVersion===snapshotVersion&&lastCarT===t&&!carViewDirty))return;
+  lastCarVersion=snapshotVersion;lastCarT=t;carViewDirty=false;renderedCars.length=0;
+  for(const cached of cachedCars){const v=cached.current,p=cached.previous;
+    carPosition.set(THREE.MathUtils.lerp(number(p.x),number(v.x),t)-center.x,0,-(THREE.MathUtils.lerp(number(p.y),number(v.y),t)-center.y));
+    carCullSphere.center.copy(carPosition);
+    if(v.id!==follow.id&&!viewFrustum.intersectsSphere(carCullSphere))continue;
+    quaternion.setFromAxisAngle(axisY,-interpolateAngle(number(p.angle),number(v.angle),t)*DEG);
+    dummy.position.copy(carPosition);dummy.quaternion.copy(quaternion);dummy.scale.set(1,1,1);dummy.updateMatrix();
+    const i=renderedCars.length;for(const part of carParts)part.mesh.setMatrixAt(i,dummy.matrix);renderedCars.push(cached);
+  }
+  for(const part of carParts){part.mesh.count=renderedCars.length;part.mesh.instanceMatrix.clearUpdateRanges();part.mesh.instanceMatrix.addUpdateRange(0,renderedCars.length*16);part.mesh.instanceMatrix.needsUpdate=true}
+  updateCarHighlight();
+}
 
 function effectStages(task,time){let flags=0;if(time>=number(task.created)&&time<number(task.created)+2.5)flags|=1;if(task.origin!==task.target){if(time>=number(task.created)&&time<number(task.txEnd))flags|=2;if(time>=number(task.finish)&&time<number(task.returnEnd))flags|=4}return flags}
 function visibleEffectStages(task,flags){if(flags&1){effectPoint.set(number(task.x)-center.x,.45,-(number(task.y)-center.y));effectSphere.set(effectPoint,55);if(!viewFrustum.intersectsSphere(effectSphere))flags&=~1}if(flags&6){const from=rsuObjects.get(task.origin),to=rsuObjects.get(task.target);if(!from||!to)return flags&1;effectPoint.copy(from.point).lerp(to.point,.5);effectPoint.y+=30;effectSphere.set(effectPoint,from.point.distanceTo(to.point)/2+70);if(!viewFrustum.intersectsSphere(effectSphere))flags&=~6}return flags}
@@ -185,9 +215,10 @@ function selectedEvents(state){
   return follow.detail?.events||(state.events||[]).filter(e=>e.vehicleId===follow.id||ids.has(e.taskId));
 }
 function updateCarHighlight(){
+  const key=follow.id+'#'+renderedCars.map(v=>v.current.id).join('|');if(key===carColorKey)return;carColorKey=key;
   for(const part of carParts)if(part.body){
-    for(let i=0;i<cachedCars.length;i++)part.mesh.setColorAt(i,cachedCars[i].current.id===follow.id?selectedCarColor:carPalette[hash(cachedCars[i].current.id)%carPalette.length]);
-    if(part.mesh.instanceColor){part.mesh.instanceColor.clearUpdateRanges();part.mesh.instanceColor.addUpdateRange(0,cachedCars.length*3);part.mesh.instanceColor.needsUpdate=true}
+    for(let i=0;i<renderedCars.length;i++)part.mesh.setColorAt(i,renderedCars[i].current.id===follow.id?selectedCarColor:carPalette[hash(renderedCars[i].current.id)%carPalette.length]);
+    if(part.mesh.instanceColor){part.mesh.instanceColor.clearUpdateRanges();part.mesh.instanceColor.addUpdateRange(0,renderedCars.length*3);part.mesh.instanceColor.needsUpdate=true}
   }
 }
 function updateCandidates(){
@@ -202,6 +233,7 @@ function clearFollow(){
   vehicleAbort?.abort();follow.epoch++;Object.assign(follow,{id:null,enabled:false,armed:false,detail:null,error:'',busy:false,lastFetch:null,pinned:false,selectionKey:'',historyKey:'',lastPose:null});
   followTrailPoints.length=0;if(followMarker)followMarker.visible=false;if(followTrail)followTrail.visible=false;if(followLink)followLink.visible=false;
   if($('tracking-badge'))$('tracking-badge').hidden=true;
+  syncVehicleAudio();
 }
 function setFollowing(enabled){
   follow.enabled=!!enabled&&!!follow.id;cameraMove=null;
@@ -211,7 +243,7 @@ function setFollowing(enabled){
     // Elevated chase view; subsequent motion translates the user's orbit/zoom unchanged.
     targetCamera(point,90,false,new THREE.Vector3(-Math.sin(angle)*.6+.28,.95,Math.cos(angle)*.6+.48));
   }
-  $('overview-button').classList.remove('active');$('focus-button').classList.remove('active');
+  $('overview-button').classList.remove('active');$('network-button').classList.remove('active');$('focus-button').classList.remove('active');
   updateFollowPanel();requestRender();
 }
 function selectVehicle(id){
@@ -251,6 +283,7 @@ function roadName(vehicle){
 }
 function updateFollowPanel(){
   if(!$('vehicle-id'))return;
+  syncVehicleAudio();
   updateVehicleOptions();
   const car=currentVehicle(),last=car||follow.detail?.vehicle,task=follow.id&&latest?taskForView(latest):null,tasks=vehicleTasks();
   const departed=!!follow.id&&!car&&follow.detail?.status==='departed';
@@ -332,15 +365,15 @@ function setupVehiclePicking(){
     const rect=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);
     // Instance matrices move every snapshot; raycasting must use their current bounds.
     body.mesh.computeBoundingSphere();raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObject(body.mesh,false)[0];
-    if(hit&&cachedCars[hit.instanceId])selectVehicle(cachedCars[hit.instanceId].current.id);
+    if(hit&&renderedCars[hit.instanceId])selectVehicle(renderedCars[hit.instanceId].current.id);
   });
 }
 function targetCamera(point,distance,animate=true,direction=new THREE.Vector3(.62,.72,.88)){const destination=point.clone().addScaledVector(direction,distance);const viewDistance=destination.distanceTo(point);controls.maxDistance=Math.max(6500,viewDistance*1.2);camera.far=Math.max(15000,viewDistance+sceneExtent*2);camera.updateProjectionMatrix();labelsDirty=true;requestRender();world.fog.near=Math.max(1900,viewDistance*.9);world.fog.far=Math.max(5500,viewDistance+sceneExtent*2);layers.sun.target.position.copy(point);world.add(layers.sun.target);layers.sun.position.copy(point).add(new THREE.Vector3(-450,750,350));if(!animate){cameraMove=null;camera.position.copy(destination);controls.target.copy(point);controls.update();return}cameraMove={from:camera.position.clone(),targetFrom:controls.target.clone(),to:destination,target:point.clone(),start:performance.now()}}
 function focusRsu(id){setFollowing(false);const rsu=rsuObjects.get(id);if(!rsu)return;targetCamera(pos(rsu.data.x,rsu.data.y),Math.max(170,number(rsu.data.sensingRadiusM)*1.7));$('focus-button').classList.add('active');$('overview-button').classList.remove('active')}
-function focusScene(animate=true){setFollowing(false);const rsus=sceneData.rsus||[];const preferred=sceneData.meta?.focusCenter||sceneData.focusCenter;if(preferred){targetCamera(pos(preferred.x??preferred[0],preferred.y??preferred[1]),270,animate)}else if(rsus.length){const first=rsus[Math.floor(rsus.length/2)];targetCamera(pos(first.x,first.y),Math.max(190,number(first.sensingRadiusM)*1.85),animate)}else targetCamera(new THREE.Vector3(0,0,0),Math.min(sceneExtent*.5,700),animate);$('focus-button').classList.add('active');$('overview-button').classList.remove('active')}
-function overview(animate=true){
+function focusScene(animate=true){setFollowing(false);const rsus=sceneData.rsus||[];const preferred=rsus[1]||rsus[0];if(preferred){targetCamera(pos(preferred.x??preferred[0],preferred.y??preferred[1]),270,animate)}else if(rsus.length){const first=rsus[Math.floor(rsus.length/2)];targetCamera(pos(first.x,first.y),Math.max(190,number(first.sensingRadiusM)*1.85),animate)}else targetCamera(new THREE.Vector3(0,0,0),Math.min(sceneExtent*.5,700),animate);$('focus-button').classList.add('active');$('overview-button').classList.remove('active')}
+function overview(animate=true,regionOnly=false){
   setFollowing(false);const w=UI.container.clientWidth,h=UI.container.clientHeight;
-  const points=(sceneData.roads||[]).flatMap(road=>(road.shape||[]).map(p=>pos(p[0],p[1])));if(!points.length)return;
+  const fb=sceneData.meta?.focusBounds;const points=regionOnly&&fb?[[fb.minX,fb.minY],[fb.maxX,fb.minY],[fb.minX,fb.maxY],[fb.maxX,fb.maxY]].map(p=>pos(...p)):(sceneData.roads||[]).flatMap(road=>(road.shape||[]).map(p=>pos(p[0],p[1])));if(!points.length)return;
   const point=new THREE.Box3().setFromPoints(points).getCenter(new THREE.Vector3());
   for(const rsu of sceneData.rsus||[])points.push(pos(rsu.x,rsu.y,23));
   const offset=new THREE.Vector3(0,.72,1),back=offset.clone().normalize(),right=new THREE.Vector3().crossVectors(axisY,back).normalize(),up=new THREE.Vector3().crossVectors(back,right);
@@ -348,10 +381,10 @@ function overview(animate=true){
   const usableX=Math.max(.12,1-2*Math.min(64,w*.08)/w),usableY=Math.max(.12,1-2*Math.min(150,h*.28)/h);let distance=0;
   // Fit actual road vertices and RSU anchors, looking north; empty box corners and roof heights do not force an unnecessarily distant view.
   for(const p of points){const v=p.clone().sub(point);distance=Math.max(distance,v.dot(back)+Math.abs(v.dot(right))/(tanH*usableX),v.dot(back)+Math.abs(v.dot(up))/(tanV*usableY))}
-  targetCamera(point,distance*1.035/offset.length(),animate,offset);$('overview-button').classList.add('active');$('focus-button').classList.remove('active');
+  targetCamera(point,distance*1.035/offset.length(),animate,offset);$('overview-button').classList.toggle('active',!regionOnly);$('network-button').classList.toggle('active',regionOnly);$('focus-button').classList.remove('active');
 }
 function drawLabels(){
-  const w=UI.container.clientWidth,h=UI.container.clientHeight,compact=$('overview-button').classList.contains('active'),placed=[];
+  const w=UI.container.clientWidth,h=UI.container.clientHeight,compact=$('overview-button').classList.contains('active')||$('network-button').classList.contains('active'),placed=[];
   const ordered=[...labels].sort((a,b)=>(a.kind==='rsu'?-1:1)-(b.kind==='rsu'?-1:1)||(a.kind==='rsu'?String(a.id).localeCompare(String(b.id)):camera.position.distanceToSquared(a.point)-camera.position.distanceToSquared(b.point)));
   const overlaps=r=>placed.some(p=>r.left<p.right+7&&r.right>p.left-7&&r.top<p.bottom+7&&r.bottom>p.top-7);
   for(const item of ordered){
@@ -373,9 +406,9 @@ function drawLabels(){
 }
 function stopFrames(){clearTimeout(frameTimer);frameTimer=null;if(frameRequest)cancelAnimationFrame(frameRequest);frameRequest=0}
 function requestRender(){renderDirty=true;if(stopped||document.hidden||frameRequest||frameTimer)return;const wait=Math.max(0,1000/QUALITY[quality].fps-(performance.now()-lastFrameAt));frameTimer=setTimeout(()=>{frameTimer=null;if(!document.hidden&&!stopped)frameRequest=requestAnimationFrame(renderFrame)},wait)}
-function updateDiagnostics(idle=false){const panel=$('performance-diagnostics');if(!panel||!renderer)return;const now=performance.now(),elapsed=now-performanceStats.since;if(elapsed>=1000){performanceStats.fps=idle?0:performanceStats.frames*1000/elapsed;performanceStats.frames=0;performanceStats.since=now}const info=renderer.info.render;Object.assign(panel.dataset,{quality,fps:(idle?0:performanceStats.fps).toFixed(1),calls:String(info.calls),triangles:String(info.triangles),effects:String(effects.size),pooledEffects:String(effectPool.length),effectObjects:String(effects.size+effectPool.length),effectLimit:String(QUALITY[quality].effects),effectsSkipped:String(performanceStats.effectSkipped),pixelRatio:String(renderer.getPixelRatio()),renderFrames:String(performanceStats.totalFrames),polls:String(performanceStats.polls),labelUpdates:String(performanceStats.labels),layoutMeasurements:'0',hidden:String(document.hidden),rendering:idle?'idle':'active',shadow:'false',antialias:'false'});$('performance-summary').textContent=(idle?'静止待机':Math.round(performanceStats.fps)+' FPS')+' · '+info.calls+' 次绘制 · '+effects.size+'/'+QUALITY[quality].effects+' 特效';$('performance-details').textContent='画质：'+(quality==='light'?'轻量 24 FPS 上限':'标准 30 FPS 上限')+'；像素比 '+renderer.getPixelRatio().toFixed(2)+'；三角形 '+info.triangles.toLocaleString()+'；累计绘制 '+performanceStats.totalFrames+'；状态请求 '+performanceStats.polls+'；标签更新 '+performanceStats.labels+'；同步尺寸测量 0；特效池 '+effectPool.length+'，本帧另有 '+performanceStats.effectSkipped+' 项仅显示在事件/指标中。GPU：'+(panel.dataset.renderer||'浏览器未提供')+'。'}
+function updateDiagnostics(idle=false){const panel=$('performance-diagnostics');if(!panel||!renderer)return;const now=performance.now(),elapsed=now-performanceStats.since;if(elapsed>=1000){performanceStats.fps=idle?0:performanceStats.frames*1000/elapsed;performanceStats.frames=0;performanceStats.since=now}const info=renderer.info.render;Object.assign(panel.dataset,{quality,fps:(idle?0:performanceStats.fps).toFixed(1),calls:String(info.calls),triangles:String(info.triangles),effects:String(effects.size),pooledEffects:String(effectPool.length),effectObjects:String(effects.size+effectPool.length),effectLimit:String(QUALITY[quality].effects),effectsSkipped:String(performanceStats.effectSkipped),pixelRatio:String(renderer.getPixelRatio()),renderFrames:String(performanceStats.totalFrames),renderedCars:String(renderedCars.length),totalCars:String(cachedCars.length),carDrawBatches:String(carParts.length),frameCpuMs:frameCostEMA.toFixed(2),adaptiveScale:String(adaptiveScale),polls:String(performanceStats.polls),labelUpdates:String(performanceStats.labels),layoutMeasurements:'0',hidden:String(document.hidden),rendering:idle?'idle':'active',shadow:'false',antialias:'false'});$('performance-summary').textContent=(idle?'静止待机':Math.round(performanceStats.fps)+' FPS')+' · '+info.calls+' 次绘制 · '+effects.size+'/'+QUALITY[quality].effects+' 特效';$('performance-details').textContent='画质：'+(quality==='light'?'轻量 24 FPS 上限':'标准 30 FPS 上限')+'；可见车辆 '+renderedCars.length+'/'+cachedCars.length+'，车辆批次 '+carParts.length+'；帧 CPU '+frameCostEMA.toFixed(1)+' ms；自适应比例 '+adaptiveScale.toFixed(2)+'；像素比 '+renderer.getPixelRatio().toFixed(2)+'；三角形 '+info.triangles.toLocaleString()+'；累计绘制 '+performanceStats.totalFrames+'；状态请求 '+performanceStats.polls+'；标签更新 '+performanceStats.labels+'；同步尺寸测量 0；特效池 '+effectPool.length+'，本帧另有 '+performanceStats.effectSkipped+' 项仅显示在事件/指标中。GPU：'+(panel.dataset.renderer||'浏览器未提供')+'。'}
 function renderFrame(now){
-  frameRequest=0;if(stopped||document.hidden)return;renderDirty=false;lastFrameAt=now;
+  frameRequest=0;if(stopped||document.hidden)return;const frameStarted=performance.now();renderDirty=false;lastFrameAt=now;
   const t=latest?.status==='running'?clamp((now-receivedAt)/interpolationMs,0,1):1;
   if(cameraMove){const elapsed=clamp((now-cameraMove.start)/1000,0,1),ease=1-(1-elapsed)**3;camera.position.lerpVectors(cameraMove.from,cameraMove.to,ease);controls.target.lerpVectors(cameraMove.targetFrom,cameraMove.target,ease);labelsDirty=true;if(elapsed===1)cameraMove=null}
   if(latest)updateFollowCamera(t);
@@ -383,23 +416,55 @@ function renderFrame(now){
   let interpolating=false;
   if(latest){updateCars(t);const before=number(previous?.simTime??latest.simTime),time=THREE.MathUtils.lerp(before,number(latest.simTime),t);updateEffects(time);interpolating=t<1&&(cachedCars.length>0||effects.size>0)}
   if(labelsDirty&&now-lastLabelsAt>=QUALITY[quality].labelMs){drawLabels();labelsDirty=false;lastLabelsAt=now;performanceStats.labels++}
-  renderer.render(world,camera);performanceStats.frames++;performanceStats.totalFrames++;if(now-performanceStats.since>=1000||!latest||latest.status!=='running')updateDiagnostics(false);
+  renderer.render(world,camera);vehicleAudio?.renderSignal(now);performanceStats.frames++;performanceStats.totalFrames++;
+  const cost=performance.now()-frameStarted;frameCostEMA=frameCostEMA*.9+cost*.1;slowFrames=cost>35?slowFrames+1:Math.max(0,slowFrames-1);
+  if(slowFrames>36&&adaptiveScale>.65&&now-lastAutoQualityAt>15000){adaptiveScale=Math.max(.65,adaptiveScale*.8);applyRenderSize();lastAutoQualityAt=now;slowFrames=0;renderDirty=true}
+  if(now-performanceStats.since>=1000||!latest||latest.status!=='running')updateDiagnostics(false);
   if(cameraMove||interpolating||renderDirty||labelsDirty)requestRender();else updateDiagnostics(true);
 }
-function clearDynamic(){clearFollow();for(const effect of effects.values())releaseEffect(effect);effects.clear();trimEffectPool(QUALITY[quality].effects);previous=null;selectedTaskId=null;lastEventKey=null;oldVehicles.clear();cachedCars=[];candidateTasks=[];lastCarVersion=-1;for(const signal of signalObjects.values()){signal.changedAt=-100;signal.mode='baseline'}}
-async function poll(){if(requestBusy||stopped||document.hidden)return;requestBusy=true;performanceStats.polls++;try{const data=await jsonFetch('/api/state');if(document.hidden)return;const reset=latest&&(number(data.simTime)<number(latest.simTime)||(data.runId&&latest.runId&&data.runId!==latest.runId));const changed=reset||!latest||data.simTime!==latest.simTime||data.status!==latest.status||data.speed!==latest.speed||data.scheduler!==latest.scheduler||data.error!==latest.error;if(reset)clearDynamic();if(changed){previous=reset?data:latest;latest=data;const now=performance.now();interpolationMs=clamp(now-receivedAt,200,QUALITY[quality].pollMs);receivedAt=now;cacheSnapshot();updateDashboard(data);requestRender()}if(data.status==='error'||data.error){status('仿真异常','error');showError(data.error||'后端仿真停止。请查看本地服务日志，或重置后重试。')}else{status(data.status==='paused'?'已连接 · 暂停':'本地仿真已连接');showError('')}await refreshVehicleTrace();UI.loading.hidden=true;initialized=true;updateDiagnostics(!frameRequest&&!frameTimer)}catch(error){if(!document.hidden){status('连接中断 · 自动重连','error');showError('暂时无法获取仿真状态：'+error.message+'。画面保留最后一次状态，正在自动重连。');if(!initialized)UI.message.textContent='地图已就绪，等待本地仿真服务…'}}finally{requestBusy=false;if(!document.hidden&&!stopped)retryTimer=setTimeout(poll,latest?.status==='running'?QUALITY[quality].pollMs:1500)}}
-function setQuality(value){quality=value==='standard'?'standard':'light';renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,QUALITY[quality].dpr));renderer.setSize(UI.container.clientWidth,UI.container.clientHeight,false);for(const effect of effects.values())releaseEffect(effect);effects.clear();trimEffectPool(QUALITY[quality].effects);labelsDirty=true;requestRender();updateDiagnostics(false)}
-function visibilityChanged(){if(!sceneData||stopped)return;stopFrames();clearTimeout(retryTimer);if(document.hidden){stateAbort?.abort();vehicleAbort?.abort();updateDiagnostics(true);return}previous=latest;oldVehicles.clear();receivedAt=performance.now();labelsDirty=true;requestRender();poll()}
-function disposeScene(){clearFollow();stopped=true;stopFrames();clearTimeout(retryTimer);stateAbort?.abort();resizeObserver?.disconnect();controls?.dispose();const geometries=new Set(),materials=new Set();world?.traverse(object=>{if(object.geometry)geometries.add(object.geometry);if(object.material)for(const mat of Array.isArray(object.material)?object.material:[object.material])materials.add(mat)});geometries.add(sharedEffects.wave);geometries.add(sharedEffects.packet);for(const g of geometries)g.dispose();for(const m of materials)m.dispose();renderer?.dispose();effects.clear();effectPool=[];cachedCars=[];candidateTasks=[];oldVehicles.clear()}
-async function control(action,value){const buttons=[$('play-button'),$('reset-button'),$('scheduler-select')];buttons.forEach(b=>b.disabled=true);$('control-note').textContent='正在应用操作…';try{const result=await jsonFetch('/api/control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,value})});if(result.ok===false)throw new Error(result.error||'后端未能应用指令');$('control-note').textContent=result.message||(action==='scheduler'?'已切换策略并重新开始同种子实验。':action==='reset'?'已使用相同随机种子重新开始。':'控制指令已应用。');if(action==='reset'||action==='scheduler')clearDynamic();clearTimeout(retryTimer);if(!requestBusy)poll();}catch(error){$('control-note').textContent=`操作未成功：${error.message}`;showError(`操作未成功：${error.message}`)}finally{buttons.forEach(b=>b.disabled=false)}}
+function clearDynamic(){clearFollow();renderedCars=[];carColorKey='';carViewDirty=true;for(const effect of effects.values())releaseEffect(effect);effects.clear();trimEffectPool(QUALITY[quality].effects);previous=null;selectedTaskId=null;lastEventKey=null;oldVehicles.clear();cachedCars=[];candidateTasks=[];lastCarVersion=-1;for(const signal of signalObjects.values()){signal.changedAt=-100;signal.mode='baseline'}}
+async function poll(){
+  if(requestBusy||stopped||document.hidden||controlBusy)return;requestBusy=true;performanceStats.polls++;
+  const selected=follow.id,epoch=follow.epoch,operation=controlEpoch;
+  try{
+    const data=await jsonFetch('/api/state'+(selected?'?vehicle='+encodeURIComponent(selected):''));if(document.hidden||stopped||operation!==controlEpoch)return;connectionHealthy=true;audioHold=false;
+    const reset=latest&&(number(data.simTime)<number(latest.simTime)||(data.runId&&latest.runId&&data.runId!==latest.runId));
+    const changed=reset||!latest||data.simTime!==latest.simTime||data.status!==latest.status||data.speed!==latest.speed||data.scheduler!==latest.scheduler||data.error!==latest.error;
+    if(reset)clearDynamic();
+    const trace=data.vehicleTrace;let traceChanged=false;
+    if(trace&&epoch===follow.epoch&&selected===follow.id&&trace.vehicleId===selected&&trace.runId===data.runId){traceChanged=follow.lastFetch!==data.simTime||!!follow.error||!follow.detail;follow.detail=trace;follow.lastFetch=data.simTime;follow.error=''}
+    if(changed){previous=reset?data:latest;latest=data;const now=performance.now();interpolationMs=clamp(now-receivedAt,200,QUALITY[quality].pollMs);receivedAt=now;cacheSnapshot();updateDashboard(data);requestRender()}
+    else if(traceChanged){updateCandidates();updateFollowPanel();updatePipeline(data);updateEvents(selectedEvents(data));requestRender()}
+    if(data.status==='error'||data.error){status('仿真异常','error');showError(data.error||'后端仿真停止。请查看本地服务日志，或重置后重试。')}
+    else{status(data.status==='paused'?'已连接 · 暂停':'本地仿真已连接');showError('')}
+    syncVehicleAudio();UI.loading.hidden=true;initialized=true;updateDiagnostics(!frameRequest&&!frameTimer);
+  }catch(error){if(operation===controlEpoch){connectionHealthy=false;if(!document.hidden){vehicleAudio?.update({running:false,hidden:false,following:false});status('连接中断 · 自动重连','error');showError('暂时无法获取仿真状态：'+error.message+'。画面保留最后一次状态，正在自动重连。');if(!initialized)UI.message.textContent='地图已就绪，等待本地仿真服务…'}}}
+  finally{requestBusy=false;if(!document.hidden&&!stopped&&!controlBusy)retryTimer=setTimeout(poll,latest?.status==='running'?QUALITY[quality].pollMs:1500)}
+}
+function setQuality(value){quality=value==='standard'?'standard':'light';adaptiveScale=1;slowFrames=0;applyRenderSize();for(const effect of effects.values())releaseEffect(effect);effects.clear();trimEffectPool(QUALITY[quality].effects);labelsDirty=true;requestRender();updateDiagnostics(false)}
+function visibilityChanged(){if(!sceneData||stopped)return;if(document.hidden)connectionHealthy=false;syncVehicleAudio();stopFrames();clearTimeout(retryTimer);if(document.hidden){stateAbort?.abort();vehicleAbort?.abort();updateDiagnostics(true);return}previous=latest;oldVehicles.clear();receivedAt=performance.now();labelsDirty=true;requestRender();poll()}
+function disposeScene(){clearFollow();vehicleAudio?.dispose();stopped=true;stopFrames();clearTimeout(retryTimer);stateAbort?.abort();resizeObserver?.disconnect();controls?.dispose();const geometries=new Set(),materials=new Set();world?.traverse(object=>{if(object.geometry)geometries.add(object.geometry);if(object.material)for(const mat of Array.isArray(object.material)?object.material:[object.material])materials.add(mat)});geometries.add(sharedEffects.wave);geometries.add(sharedEffects.packet);for(const g of geometries)g.dispose();for(const m of materials)m.dispose();renderer?.dispose();effects.clear();effectPool=[];cachedCars=[];candidateTasks=[];oldVehicles.clear()}
+async function control(action,value){
+  if(controlBusy)return;controlBusy=true;controlEpoch++;stateAbort?.abort();
+  if(['pause','reset','scheduler'].includes(action))audioHold=true;syncVehicleAudio();
+  const buttons=[$('play-button'),$('reset-button'),$('scheduler-select'),$('speed-select')];buttons.forEach(b=>b.disabled=true);$('control-note').textContent='正在应用操作…';
+  try{
+    const result=await jsonFetch('/api/control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,value})});
+    if(result.ok===false)throw new Error(result.error||'后端未能应用指令');
+    $('control-note').textContent=result.message||(action==='scheduler'?'已切换策略并重新开始同种子实验。':action==='reset'?'已使用相同随机种子重新开始。':'控制指令已应用。');
+    if(action==='reset'||action==='scheduler')clearDynamic();
+  }catch(error){connectionHealthy=false;syncVehicleAudio();$('control-note').textContent=`操作未成功：${error.message}`;showError(`操作未成功：${error.message}`)}
+  finally{controlBusy=false;buttons.forEach(b=>b.disabled=false);clearTimeout(retryTimer);if(!requestBusy)poll()}
+}
 function setupUI(){
+  vehicleAudio=new VehicleAudio({mount:$('vehicle-audio')});
   $('vehicle-select').addEventListener('change',e=>{if(e.target.value)selectVehicle(e.target.value)});
   $('pick-vehicle-button').addEventListener('click',startFollowDemo);
   $('follow-toggle').addEventListener('click',()=>setFollowing(true));
   $('follow-exit').addEventListener('click',()=>setFollowing(false));
   $('vehicle-task-select').addEventListener('change',e=>pinVehicleTask(e.target.value));
   setupVehiclePicking();
-  $('play-button').addEventListener('click',()=>control(latest?.status==='running'?'pause':'resume'));$('reset-button').addEventListener('click',()=>control('reset'));$('speed-select').addEventListener('change',e=>control('speed',Number(e.target.value)));$('scheduler-select').addEventListener('change',e=>control('scheduler',e.target.value));$('overview-button').addEventListener('click',overview);$('focus-button').addEventListener('click',()=>focusScene());$('coverage-toggle').addEventListener('change',e=>{for(const r of rsuObjects.values())r.coverage.visible=e.target.checked;requestRender()});$('quality-select').addEventListener('change',e=>setQuality(e.target.value));document.addEventListener('visibilitychange',visibilityChanged);window.addEventListener('pagehide',disposeScene,{once:true});for(const id of ['about-button','data-details'])$(id).addEventListener('click',()=>$('about-dialog').showModal());$('about-dialog').addEventListener('click',e=>{if(e.target===$('about-dialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close()}});
+  $('play-button').addEventListener('click',()=>control(latest?.status==='running'?'pause':'resume'));$('reset-button').addEventListener('click',()=>control('reset'));$('speed-select').addEventListener('change',e=>control('speed',Number(e.target.value)));$('scheduler-select').addEventListener('change',e=>control('scheduler',e.target.value));$('overview-button').addEventListener('click',()=>overview());$('network-button').addEventListener('click',()=>overview(true,true));$('focus-button').addEventListener('click',()=>focusScene());$('coverage-toggle').addEventListener('change',e=>{for(const r of rsuObjects.values())r.coverage.visible=e.target.checked;requestRender()});$('quality-select').addEventListener('change',e=>setQuality(e.target.value));document.addEventListener('visibilitychange',visibilityChanged);window.addEventListener('pagehide',disposeScene,{once:true});window.addEventListener('pageshow',event=>{if(event.persisted&&stopped)window.location.reload()});for(const id of ['about-button','data-details'])$(id).addEventListener('click',()=>$('about-dialog').showModal());$('about-dialog').addEventListener('click',e=>{if(e.target===$('about-dialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close()}});
 }
 async function boot(){try{setupThree();setupUI();sceneData=await jsonFetch('/api/scene');if(!sceneData.roads?.length)throw new Error('地图尚未包含可绘制的道路。请检查地图构建步骤与 /api/scene。');buildMap(sceneData);UI.message.textContent='真实地理场景已载入，正在连接 SUMO…';const gl=renderer.getContext(),extension=gl.getExtension('WEBGL_debug_renderer_info'),panel=$('performance-diagnostics');panel.dataset.vendor=String(extension?gl.getParameter(extension.UNMASKED_VENDOR_WEBGL):gl.getParameter(gl.VENDOR));panel.dataset.renderer=String(extension?gl.getParameter(extension.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER));panel.title=panel.dataset.renderer;performanceStats.since=performance.now();requestRender();poll();}catch(error){status('启动未完成','error');UI.loading.querySelector('.loader').style.display='none';UI.loading.querySelector('h3').textContent='暂时无法载入演示';UI.message.textContent=error.message+' 请确认本地服务已启动后刷新页面。';console.error(error)}}
 boot();

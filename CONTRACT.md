@@ -25,12 +25,15 @@ Coordinates are SUMO local meters, x=east and y=north. Three.js maps these to `(
 }
 ```
 
-SUMO scene entry is `scenario/tangdao.sumocfg`. At least 3 selected junction RSUs if data permits, within a compact focus area; road shapes may contain all passenger edges including internal edges if useful. Map metadata documents guessed traffic lights and building heights explicitly. Agent may add fields without changing existing ones.
+SUMO scene entry is `scenario/tangdao.sumocfg`. Version 1.4 configures nine junction RSUs along Lijiang West Road and Changjiang Middle Road with north-south connections. `meta.focusBounds` is the 2.49 by 2.18 km demonstration region; `bounds` is the full imported 4.49 by 2.95 km road geometry. Road shapes include passenger and internal connection edges. Map metadata explicitly records synthetic signal timing and assumed building heights. New fields may be added while preserving existing field semantics.
 
 ## HTTP
 
 - `GET /api/scene`: scene.json.
 - `GET /api/state`: snapshot below; server simulation ticks independently under lock.
+- `GET /api/state?vehicle=<URL-encoded ID>`: same snapshot plus `vehicleTrace`, collected under the same lock with identical `runId` and `simTime`. Follow mode uses one request every 500 ms. An unknown ID returns HTTP 200 with `vehicleTrace.status="unknown"`; standalone `/api/vehicle` retains its 404 behavior. Stale selection, control-command epoch and run responses are discarded by the frontend.
+- `GET /api/integration`: model contracts, configured state and bounded shadow results.
+- `POST /api/model/probe`: explicit audio-reference inference, HTTP 202 accepted or 429 rejected; no physical device command and no automatic replacement of synthetic control inputs. Complete contracts and executable examples: `docs/MODEL_INTEGRATION.md`.
 - `GET /api/vehicle?id=<URL-encoded vehicle ID>`: complete current-run journey for one observed vehicle, without the global snapshot's recent-task/event limits. Indexed by vehicle so a follower does not download the whole run. Exactly one nonblank ID of at most 256 characters with no control characters is required (400 otherwise). Unknown or pre-reset IDs return 404 with `status:"unknown"` and empty task/event lists. No simulation mutation.
 - `POST /api/control` JSON `{action:"pause"|"resume"|"reset"|"speed"|"scheduler", value:...}`. Speed values 0.5,1,2,4. Scheduler `least_finish` or `local`. Reset cleanly restarts seeded SUMO. A changed scheduler takes effect after reset, or server resets automatically and says so.
 - `GET /api/health`: ready/backend/sumo status.
@@ -73,3 +76,9 @@ Tasks remain in creation order, with full timing, lane/location, and any observe
 ## Signal safety and truthfulness
 
 Use synthetic acoustic task results from vehicle encounters, not actual WAV recognition. Simple least predicted finish-time rule: transfer + assigned work remaining + service time. The task must complete before its result influences the controller. Extend an already safe green only for matching controlled incoming lanes; never jump across yellow/all-red, bound green duration and log applied/rejected actions. The original scenario signal plans are synthesized by SUMO, not real municipal timing. A few visible green responses should occur during validation; no fabricated counters. All animations derive from task timestamps and SUMO state. The UI shows these boundaries in a concise persistent data-status row and an expandable explanation.
+
+## Audible demonstration and visual performance
+
+`web/vehicle-audio.js` auditions a locally bundled CC0 engine sample. SUMO speed controls pitch and volume; AnalyserNode drives the displayed waveform/spectrum. No autoplay before a user click, no microphone permission, and no claim of measured sound pressure or recognition. Pause, hidden page, disconnected backend, free camera, departed vehicle and disposal stop audio. Source and license: `docs/AUDIO_SOURCES.md`.
+
+Only camera-visible vehicles are uploaded to two instanced draw batches; the selected car is retained for stable picking/identity. Rendering culling does not remove vehicles from SUMO or global metrics. Light/standard render buffers are capped at 0.9/1.8 million pixels, respectively; frame scheduling caps remain 24/30 FPS. Audio charts share the existing scheduler with a 12.5 FPS cap.

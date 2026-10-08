@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "checks": 16,
+  "details": [
+    "actual_scene_and_signal_batches",
+    "vehicle_color_and_matrix_upload_cache",
+    "labels_have_no_synchronous_size_reads",
+    "stage_boundaries",
+    "bounded_pool_1000_tasks",
+    "expired_effects_reused",
+    "standard_limit_and_reduction_release",
+    "outside_view_creates_no_effects",
+    "repeat_reset_does_not_grow_resources",
+    "paused_render_schedules_no_continuation",
+    "paused_has_zero_pending_frame_work",
+    "quality_fps_cap",
+    "frame_delay_at_least_41ms",
+    "hidden_cancels_frames_and_poll_guard",
+    "hidden_has_zero_frame_timers",
+    "dispose_releases_scene_resources"
+  ],
+  "scope": "Actual frontend functions and Three.js geometry in Node VM; mocked DOM/timers/renderer. Not a GPU or browser benchmark.",
+  "fixture": {
+    "vehicles": 227,
+    "tasks": 100,
+    "signals": 4
+  }
+}

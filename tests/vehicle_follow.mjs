@@ -189,9 +189,56 @@ await check('hidden_page_and_unchanged_sim_time_skip_vehicle_fetch',async h=>{
   await h.run("document.hidden=false;follow.lastFetch=latest.simTime;refreshVehicleTrace()");assert.equal(h.requests.length,0);
 });
 
+await check('vehicle_geometry_is_two_batches_with_one_transform_each',h=>h.run(`
+  assert.equal(carParts.length,2);viewFrustum.intersectsSphere=()=>true;updateCars(.5);
+  assert.equal(renderedCars.length,2);assert.equal(carParts[0].mesh.count,2);assert.equal(carParts[1].mesh.count,2);
+  const a=new THREE.Matrix4(),b=new THREE.Matrix4();carParts[0].mesh.getMatrixAt(1,a);carParts[1].mesh.getMatrixAt(1,b);assert(a.equals(b));
+`));
+await check('offscreen_culling_retains_selected_vehicle_and_pick_mapping',h=>h.run(`
+  follow.id='car-B';viewFrustum.intersectsSphere=()=>false;carViewDirty=true;updateCars(.5);
+  assert.equal(renderedCars.length,1);assert.equal(renderedCars[0].current.id,'car-B');assert.equal(carParts[0].mesh.count,1);
+  const color=new THREE.Color();carParts[0].mesh.getColorAt(0,color);assert(Math.abs(color.r-selectedCarColor.r)<1e-6&&Math.abs(color.g-selectedCarColor.g)<1e-6&&Math.abs(color.b-selectedCarColor.b)<1e-6);
+  follow.id=null;carViewDirty=true;updateCars(.5);assert.equal(renderedCars.length,0);
+  assert.equal(latest.vehicles.length,2);assert.equal(cachedCars.length,2);
+`));
+await check('4k_render_buffer_has_pixel_budget_without_changing_css_size',h=>h.run(`
+  quality='light';adaptiveScale=1;const ratio=renderPixelRatio(3840,2160);assert(3840*2160*ratio*ratio<=900001);assert(ratio<.34);
+  quality='standard';const r=renderPixelRatio(3840,2160);assert(3840*2160*r*r<=1800001);
+  quality='light';assert.equal(renderPixelRatio(800,600),.85);
+`));
+await check('combined_poll_uses_one_request_for_state_and_vehicle_trace',async h=>{
+  const pending=h.run("follow.id='car-A';poll()");assert.equal(h.requests.length,1);assert.equal(h.requests[0].url,'/api/state?vehicle=car-A');
+  const state=h.run('JSON.parse(JSON.stringify(latest))');state.vehicleTrace=dossier('car-A');h.requests[0].resolve(state);await pending;
+  h.run("assert.equal(follow.detail.vehicleId,'car-A');assert.equal(follow.lastFetch,latest.simTime)");assert.equal(h.requests.length,1);
+});
+await check('combined_poll_discards_detail_after_vehicle_switch',async h=>{
+  const pending=h.run("follow.id='car-A';poll()");h.run("follow.id='car-B';follow.epoch++");
+  const state=h.run('JSON.parse(JSON.stringify(latest))');state.vehicleTrace=dossier('car-A');h.requests[0].resolve(state);await pending;
+  h.run("assert.equal(follow.id,'car-B');assert.equal(follow.detail,null)");
+});
+await check('combined_poll_aborts_when_hidden',async h=>{
+  const pending=h.run("follow.id='car-A';poll()");h.run("document.hidden=true;visibilityChanged()");assert.equal(h.requests[0].signal.aborted,true);
+  const state=h.run('JSON.parse(JSON.stringify(latest))');state.vehicleTrace=dossier('car-A');h.requests[0].resolve(state);await pending;
+  h.run('assert.equal(follow.detail,null)');
+});
+await check('control_epoch_rejects_pre_command_running_response',async h=>{
+  const pending=h.run("latest.status='running';follow.id='car-A';poll()");
+  const oldState=h.run('JSON.parse(JSON.stringify(latest))');oldState.simTime=31;
+  h.run("controlEpoch++;audioHold=true;connectionHealthy=false");
+  h.requests[0].resolve(oldState);await pending;
+  h.run("assert.equal(latest.simTime,30);assert.equal(connectionHealthy,false);assert.equal(audioHold,true)");
+});
+await check('hiding_revokes_audio_until_fresh_state_succeeds',h=>h.run(`
+  const inputs=[];vehicleAudio={update:v=>inputs.push(v),dispose(){}};follow.id='car-A';follow.enabled=true;latest.status='running';connectionHealthy=true;
+  document.hidden=true;visibilityChanged();assert.equal(connectionHealthy,false);assert.equal(inputs.at(-1).running,false);
+  document.hidden=false;syncVehicleAudio();assert.equal(inputs.at(-1).running,false);
+  connectionHealthy=true;syncVehicleAudio();assert.equal(inputs.at(-1).running,true);
+  audioHold=true;syncVehicleAudio();assert.equal(inputs.at(-1).running,false);
+`));
+
 const report={passed:true,checks:checks.length,details:checks,
   scope:'Shipped frontend functions and real Three.js vectors/geometries in Node VM. Mocked DOM, renderer, frame timers, and HTTP. Not a GPU, screenshot, browser, or SUMO integration benchmark.',
   limits:{lightEffectObjects:12,followTrailPoints:120},source:'web/app.js',test:'tests/vehicle_follow.mjs'};
-const evidenceDir=path.join(root,'evidence/cyberpunk_20261008');fs.mkdirSync(evidenceDir,{recursive:true});
+const evidenceDir=path.join(root,'evidence/v1_4_20261008');fs.mkdirSync(evidenceDir,{recursive:true});
 fs.writeFileSync(path.join(evidenceDir,'frontend_follow_checks.json'),JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify(report,null,2));
