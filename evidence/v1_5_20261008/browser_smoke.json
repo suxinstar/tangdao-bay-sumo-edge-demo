@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "browser": "Codex in-app Chromium",
+  "gpu": "Intel UHD Graphics 730 / D3D11",
+  "scope": "Live UI smoke, not timed GPU or whole-machine benchmark",
+  "policy": "meo_completion",
+  "observations": {
+    "followedVehicle": "flow_coast_east.0",
+    "observedSpeedKmh": 59.4,
+    "tasksSensed": 2,
+    "tasksCompleted": 2,
+    "tasksOffloaded": 2,
+    "pipelineResourceProfile": "M1",
+    "pipelineReturnTimeS": 55.8,
+    "pipelineSignalOutcome": "nonmatching green, held timing",
+    "performanceSummaryObserved": "21 FPS, 21 draw calls, 1/12 effects",
+    "consoleWarningsOrErrors": [],
+    "soundEnabledThenMuted": true,
+    "pauseAndAdjacentOverview": true,
+    "switchToAccuracyAndResetWhilePaused": true,
+    "restoredCompletionDefault": true
+  },
+  "screenshot": "adjacent_roads_live.png"
+}

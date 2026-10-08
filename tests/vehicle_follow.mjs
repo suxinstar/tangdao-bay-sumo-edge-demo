@@ -59,6 +59,19 @@ async function check(name,body){const h=harness();await body(h);h.run('disposeSc
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 const dossier=(id,runId='run-1')=>({vehicleId:id,runId,simTime:30,status:'active',vehicle:{id,x:0,y:0,speed:2},tasks:[],events:[],summary:{sensed:0,completed:0,offloaded:0,pending:0}});
 
+await check('meo_drop_has_no_compute_return_signal_or_transfer',h=>h.run(`
+  const dropped={id:'drop-1',vehicleId:'car-A',created:10,origin:sceneData.rsus[0].id,target:null,dropped:true,status:'dropped',dropReason:'MEO策略选择丢弃'};
+  follow.id='car-A';latest.tasks=[dropped];latest.trace={taskId:'drop-1'};selectedTaskId=null;
+  assert(terminalTask(dropped));assert.equal(effectStages(dropped,10.5),0);
+  updatePipeline(latest);updateFollowPanel();
+  const steps=document.getElementById('pipeline').querySelectorAll('[data-stage]');
+  for(let i=2;i<5;i++){assert.equal(steps[i].querySelector('small').textContent,'未执行');assert(!steps[i].classList.contains('done'));}
+  assert(!document.getElementById('trace-label').textContent.includes('null'));
+  assert(document.getElementById('vehicle-journey').textContent.includes('待回传 0'));
+  assert(document.getElementById('vehicle-signal').textContent.includes('不触发信号'));
+  latest.tasks=[dropped,taskA2];assert.equal(taskForView(latest).id,'task-A2');
+`));
+
 await check('selected_vehicle_tasks_ignore_global_trace',h=>h.run(`
   follow.id='car-A';latest.tasks=[taskA2,taskB];selectedTaskId='task-B';
   assert.equal(taskForView(latest).id,'task-A2');assert.equal(selectedTaskId,'task-A2');
@@ -239,6 +252,6 @@ await check('hiding_revokes_audio_until_fresh_state_succeeds',h=>h.run(`
 const report={passed:true,checks:checks.length,details:checks,
   scope:'Shipped frontend functions and real Three.js vectors/geometries in Node VM. Mocked DOM, renderer, frame timers, and HTTP. Not a GPU, screenshot, browser, or SUMO integration benchmark.',
   limits:{lightEffectObjects:12,followTrailPoints:120},source:'web/app.js',test:'tests/vehicle_follow.mjs'};
-const evidenceDir=path.join(root,'evidence/v1_4_20261008');fs.mkdirSync(evidenceDir,{recursive:true});
+const evidenceDir=path.join(root,'evidence/v1_5_20261008');fs.mkdirSync(evidenceDir,{recursive:true});
 fs.writeFileSync(path.join(evidenceDir,'frontend_follow_checks.json'),JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify(report,null,2));

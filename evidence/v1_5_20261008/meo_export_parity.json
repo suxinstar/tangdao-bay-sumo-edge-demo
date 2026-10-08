@@ -1,0 +1,28 @@
+{
+  "torchVersion": "2.6.0+cpu",
+  "numpyVersion": "1.26.4",
+  "specialists": {
+    "completion": {
+      "checkpointSha256": "556aac9ded755dd3a01a276384495658691cec07345649166208952b3bc91cab",
+      "actorSha256": "02c437c5f619f28aacae3f26f488cbd21d99b08944076b4893b498cb3a4ea098",
+      "graphs": 52,
+      "headArgmaxComparisons": 10920,
+      "argmaxMismatches": 0,
+      "maximumAbsoluteLogitDifference": 0.00011444091796875,
+      "meanInferenceMs": 1.2970634615717596,
+      "p95InferenceMs": 2.150750000328116,
+      "assetBytes": 1712024
+    },
+    "accuracy": {
+      "checkpointSha256": "e12cbbec9e16f7bcccddc4566de416d1e30c6077410d32c43d0ba386cdf3311c",
+      "actorSha256": "b55e16099cdddbae8ba1ce9ee6db08abe79ca92c46f0db4733cf7b7be8969aea",
+      "graphs": 52,
+      "headArgmaxComparisons": 10920,
+      "argmaxMismatches": 0,
+      "maximumAbsoluteLogitDifference": 0.0001983642578125,
+      "meanInferenceMs": 1.1423096152961638,
+      "p95InferenceMs": 1.9216199998481898,
+      "assetBytes": 1695397
+    }
+  }
+}

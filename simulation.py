@@ -24,6 +24,40 @@ from uuid import uuid4
 from integration import (AudioFrame, SyntheticPerception, SyntheticCompute, SyntheticTransport,
                          LeastFinishScheduler, BoundedGreenPolicy, TraCISignalActuator)
 
+SCHEDULERS = ('meo_completion', 'meo_accuracy', 'least_finish', 'local')
+
+
+def reserve_meo_task(nodes, origin, now, decision, work_factor=1.0, *,
+                     compute_provider=None, transport_provider=None):
+    """Apply a learned action without replacing it with a heuristic choice."""
+    mode = decision.get('mode')
+    target = decision.get('target')
+    if mode == 'drop' or (mode == 'offload' and decision.get('dropped')):
+        if target is not None:
+            raise ValueError('a dropped action cannot reserve a compute node')
+        return {'target': None, 'offloaded': False, 'dropped': True,
+                'dropReason': 'MEO 卸载无有效邻居，丢弃本次任务' if mode == 'offload' else 'MEO 策略选择丢弃本次任务',
+                'policyDecision': decision}
+    if mode not in ('local', 'offload') or target not in nodes:
+        raise ValueError('MEO returned an invalid execution mode or node')
+    if (mode == 'local') != (target == origin):
+        raise ValueError('MEO execution mode and node disagree')
+    factor = decision.get('computeFactor')
+    if type(factor) not in (int, float) or not math.isfinite(factor) or factor <= 0:
+        raise ValueError('MEO returned an invalid model compute factor')
+    source, node = nodes[origin], nodes[target]
+    distance = math.hypot(node['x']-source['x'], node['y']-source['y'])
+    tx, back = (transport_provider or SyntheticTransport()).estimate_seconds(distance, remote=target != origin)
+    service = (compute_provider or SyntheticCompute()).estimate_seconds(node, work_factor * factor)
+    if any(not math.isfinite(x) or x < 0 for x in (tx, back, service)) or service == 0:
+        raise ValueError('invalid MEO transport or compute estimate')
+    arrival = now + tx
+    start = max(arrival, node['available'])
+    finish = start + service
+    nodes[target]['available'] = finish
+    return {'target': target, 'txEnd': arrival, 'start': start, 'finish': finish,
+            'returnEnd': finish + back, 'offloaded': target != origin, 'policyDecision': decision}
+
 
 def reserve_task(nodes, origin, now, scheduler, work_factor=1.0, *,
                  scheduler_provider=None, compute_provider=None, transport_provider=None):
@@ -72,6 +106,8 @@ class DemoSimulation:
                  scheduler_provider=None, compute_provider=None, transport_provider=None):
         self.root = Path(root).resolve()
         self.scene = json.loads((self.root / 'data/scene.json').read_text(encoding='utf-8'))
+        if scheduler not in SCHEDULERS:
+            raise ValueError('unknown scheduler policy')
         self.scheduler = scheduler
         self.speed = float(speed)
         self.service_time = service_time
@@ -98,6 +134,11 @@ class DemoSimulation:
             self._close_sumo()
 
     def _reset_data(self):
+        if self.scheduler.startswith('meo_'):
+            from integration.meo_policy import MeoScheduler
+            self.meo_scheduler = MeoScheduler(self.root, variant=self.scheduler.removeprefix('meo_'))
+        else:
+            self.meo_scheduler = None
         self.rng = random.Random(self.SEED)
         self.status, self.error, self.sim_time = 'paused', None, 0.0
         self.tasks, self.events, self.vehicles, self.signals = [], [], [], []
@@ -124,7 +165,7 @@ class DemoSimulation:
         self.incoming, self.link_positions, self.tls_links = {}, {}, {}
         self.departure_times, self.trip_times = {}, []
         self.trip_time_sum = 0.0
-        self.metrics = {'sensed': 0, 'completed': 0, 'offloaded': 0, 'meanLatency': 0.0,
+        self.metrics = {'sensed': 0, 'completed': 0, 'dropped': 0, 'offloaded': 0, 'meanLatency': 0.0,
                         'meanQueueDelay': 0.0, 'signalActions': 0, 'signalRejected': 0,
                         'vehicles': 0, 'completedTrips': 0, 'meanTripTime': None,
                         'haltingVehicles': 0}
@@ -173,6 +214,7 @@ class DemoSimulation:
             links = tls_domain.getControlledLinks(tls)
             self.tls_links[tls] = links
             self.incoming[node_id] = {link[0] for group in links for link in group}
+            node['incomingLaneIds'] = sorted(self.incoming[node_id])
             positions = []
             for link_index, group in enumerate(links):
                 for incoming_lane, _, _ in group:
@@ -193,6 +235,7 @@ class DemoSimulation:
     def _configuration(self):
         return {'runId': self.run_id, 'seed': self.SEED, 'stepLengthS': self.STEP,
                 'scheduler': self.scheduler, 'maximumGreenS': self.MAX_GREEN,
+                'schedulerModel': self.meo_scheduler.metadata() if self.meo_scheduler else None,
                 'extensionS': self.EXTENSION, 'maximumSimulationTimeS': self.max_time,
                 'serviceTimeSByRSU': {k: v['serviceTimeS'] for k, v in self.node_by_id.items()},
                 'transmissionModel': 'local 0.04s; remote 0.28s + distance/1600m/s',
@@ -294,8 +337,16 @@ class DemoSimulation:
 
     def _sense(self, vehicle, origin):
         task_id = f'T{len(self.tasks) + 1:05d}'
-        timing = reserve_task(self.node_by_id, origin, self.sim_time,
-                              self.scheduler, self.rng.uniform(0.9, 1.1),
+        work_factor = self.rng.uniform(0.9, 1.1)
+        if self.meo_scheduler:
+            decision = self.meo_scheduler.decide(self.node_by_id, origin, self.sim_time,
+                        {'vehicleId': vehicle['id'], **vehicle}, self.pending_tasks, vehicles=self.vehicles)
+            timing = reserve_meo_task(self.node_by_id, origin, self.sim_time, decision, work_factor,
+                              compute_provider=getattr(self, 'compute_provider', None),
+                              transport_provider=getattr(self, 'transport_provider', None))
+        else:
+            timing = reserve_task(self.node_by_id, origin, self.sim_time,
+                              self.scheduler, work_factor,
                               scheduler_provider=getattr(self, 'scheduler_provider', None),
                               compute_provider=getattr(self, 'compute_provider', None),
                               transport_provider=getattr(self, 'transport_provider', None))
@@ -305,19 +356,28 @@ class DemoSimulation:
                 'x': vehicle['x'], 'y': vehicle['y'], 'laneId': vehicle['laneId'],
                 'created': self.sim_time, 'synthetic': True, 'perception': observation.to_dict(), **timing}
         self.tasks.append(task)
-        self.pending_tasks[task_id] = task
-        heapq.heappush(self.return_heap, (task['returnEnd'], task_id))
+        if not task.get('dropped'):
+            self.pending_tasks[task_id] = task
+            heapq.heappush(self.return_heap, (task['returnEnd'], task_id))
         self.tasks_by_vehicle.setdefault(vehicle['id'], []).append(task)
         self.task_by_id[task_id] = task
         self.metrics['sensed'] += 1
         self.metrics['offloaded'] += int(task['offloaded'])
         self.node_by_id[origin]['offloaded'] += int(task['offloaded'])
         self._event('sense', f'{origin} 感知车辆 {vehicle["id"]}，生成合成声学任务', origin, task_id)
+        if task.get('dropped'):
+            self.metrics['dropped'] += 1
+            heapq.heappush(self.recent_completed, (task_id, task))
+            if len(self.recent_completed) > 10:
+                heapq.heappop(self.recent_completed)
+            self._event('drop', f'{task_id}：{task["dropReason"]}；不计算、不触发信号', origin, task_id,
+                        task=copy.deepcopy(task))
+            return
         self._event('dispatch', f'{task_id} → {task["target"]}（{"跨站卸载" if task["offloaded"] else "本地处理"}）', origin, task_id,
                     task=copy.deepcopy(task))
 
     def _complete(self, task):
-        if task.get('returned'):
+        if task.get('returned') or task.get('dropped'):
             return
         task['returned'] = True
         self.pending_tasks.pop(task['id'], None)
@@ -335,6 +395,8 @@ class DemoSimulation:
         self._apply_control(task)
 
     def _apply_control(self, task):
+        if task.get('dropped'):
+            return
         tls = self.node_by_id[task['origin']]['intersectionId']
         domain = self.connection.trafficlight
         state = domain.getRedYellowGreenState(tls)
@@ -408,6 +470,8 @@ class DemoSimulation:
             self.event_output.write(json.dumps(event, ensure_ascii=False) + '\n')
 
     def _task_view(self, task):
+        if task.get('dropped'):
+            return dict(task, status='dropped')
         now = self.sim_time
         status = ('done' if task.get('returned') else 'returning' if now >= task['finish'] else
                   'processing' if now >= task['start'] else 'queued' if now >= task['txEnd'] else 'transmitting')
@@ -427,6 +491,7 @@ class DemoSimulation:
             tasks = self.tasks_by_vehicle.get(vehicle_id, [])
             status = ('present' if history.get('present') else 'departed') if history is not None else 'unknown'
             completed = sum(bool(task.get('returned')) for task in tasks)
+            dropped = sum(bool(task.get('dropped')) for task in tasks)
             result = {'runId': self.run_id, 'simTime': self.sim_time, 'vehicleId': vehicle_id,
                       'status': status, 'vehicle': history.get('vehicle') if history else None,
                       'firstSeen': history.get('firstSeen') if history else None,
@@ -438,7 +503,9 @@ class DemoSimulation:
                       'events': self.events_by_vehicle.get(vehicle_id, []),
                       'summary': {'sensed': len(tasks), 'completed': completed,
                                   'offloaded': sum(bool(task['offloaded']) for task in tasks),
-                                  'pending': len(tasks) - completed}}
+                                  'pending': len(tasks) - completed - dropped}}
+            if dropped:
+                result['summary']['dropped'] = dropped
             if status == 'unknown':
                 result['error'] = 'vehicle not observed in the current run'
             return copy.deepcopy(result) if _copy else result
@@ -471,8 +538,8 @@ class DemoSimulation:
                 trace = {'taskId': selected['id'], 'origin': selected['origin'], 'target': selected['target'],
                          'controlApplied': selected.get('controlApplied'), 'controlReason': selected.get('controlReason'),
                          'stages': [{'key': 'sense', 'state': 'done'}, {'key': 'dispatch', 'state': 'done'},
-                                    {'key': 'compute', 'state': 'done' if self.sim_time >= selected['finish'] else 'active' if self.sim_time >= selected['start'] else 'waiting'},
-                                    {'key': 'signal', 'state': 'done' if selected.get('returned') else 'waiting'}]}
+                                    {'key': 'compute', 'state': 'skipped' if selected.get('dropped') else 'done' if self.sim_time >= selected['finish'] else 'active' if self.sim_time >= selected['start'] else 'waiting'},
+                                    {'key': 'signal', 'state': 'skipped' if selected.get('dropped') else 'done' if selected.get('returned') else 'waiting'}]}
             result = {'status': self.status, 'simTime': self.sim_time, 'speed': self.speed,
                                   'scheduler': self.scheduler, 'error': self.error, 'runId': self.run_id,
                                   'vehicles': self.vehicles, 'signals': self.signals, 'rsus': nodes, 'tasks': views,
@@ -510,7 +577,8 @@ class DemoSimulation:
                                    'synthetic': True, 'actualAudioInference': False},
                     'compute': {'provider': type(getattr(self, 'compute_provider', SyntheticCompute())).__name__,
                                 'source': 'configured_demo_service_seconds', 'measured': False},
-                    'scheduler': {'provider': type(getattr(self, 'scheduler_provider', LeastFinishScheduler())).__name__},
+                    'scheduler': self.meo_scheduler.metadata() if self.meo_scheduler else {
+                        'provider': type(getattr(self, 'scheduler_provider', LeastFinishScheduler())).__name__},
                     'transport': {'provider': type(getattr(self, 'transport_provider', SyntheticTransport())).__name__,
                                   'measured': False},
                     'signal': {'provider': 'TraCISignalActuator', 'target': 'local_SUMO', 'physicalDevice': False},
@@ -558,15 +626,15 @@ class DemoSimulation:
             elif action in ('reset', 'scheduler'):
                 running = self.status == 'running'
                 if action == 'scheduler':
-                    if value not in ('least_finish', 'local'):
+                    if value not in SCHEDULERS:
                         raise ValueError('未知调度策略')
                 self._write_export()
                 self._close_sumo()
                 if action == 'scheduler':
                     self.scheduler = value
-                self._reset_data()
-                self.last_action = {}
                 try:
+                    self._reset_data()
+                    self.last_action = {}
                     self._start_sumo()
                     self.status = 'running' if running else 'paused'
                 except Exception as exc:

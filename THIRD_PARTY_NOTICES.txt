@@ -30,3 +30,6 @@ https://opengameart.org/content/racing-car-engine-sound-loops
 https://creativecommons.org/publicdomain/zero/1.0/
 The distributed WAV, original link, license text and SHA-256 are preserved under web/audio/.
 This is a simulated audition, not a recording captured in Tangdao Bay.
+
+NumPy 1.26.4: BSD-3-Clause with bundled component notices. Official PyPI wheel retained in portable _runtime/numpy-1.26.4-cp312; full license at numpy-1.26.4.dist-info/LICENSE.txt.
+MEO actor inference assets: derived from user-supplied MEO_Project_runnable.zip for this authorized integration; checkpoint/source hashes in models/meo/manifest.json. No third-party acoustic model weights are included.

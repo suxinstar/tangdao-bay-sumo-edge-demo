@@ -6,7 +6,7 @@ root = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--portable', action='store_true', help='also include already-prepared _runtime binaries')
 args = parser.parse_args()
-version = '1.4.0'
+version = '1.5.0'
 prefix = 'TangdaoBay_3D_Demo'
 excluded_dirs = {'__pycache__', 'runs', 'qa', '.venv', '.git', 'downloads'}
 excluded_names = {'delivery_manifest.json', 'portable_manifest.json', 'package_verification.json', 'three-0.180.0.tgz'}
@@ -17,7 +17,7 @@ def allowed(p):
             and not any(part.startswith('.staging-') or '.partial.' in part for part in parts))
 core = sorted(p for p in root.rglob('*') if allowed(p) and '_runtime' not in p.relative_to(root).parts)
 runtime = sorted(p for p in (root / '_runtime').rglob('*') if allowed(p)) if args.portable else []
-if args.portable and not all((root / p).is_file() for p in ('_runtime/python-3.12.10/python.exe', '_runtime/sumo-1.25.0/bin/sumo.exe')):
+if args.portable and not all((root / p).is_file() for p in ('_runtime/python-3.12.10/python.exe', '_runtime/sumo-1.25.0/bin/sumo.exe', '_runtime/numpy-1.26.4-cp312/numpy/__init__.py')):
     raise SystemExit('Prepare portable dependencies before packaging: Start_Demo.ps1 -PrepareOnly -PortableOnly')
 def inventory(files):
     return [{'path': p.relative_to(root).as_posix(), 'bytes': p.stat().st_size, 'sha256': hashlib.sha256(p.read_bytes()).hexdigest()} for p in files]

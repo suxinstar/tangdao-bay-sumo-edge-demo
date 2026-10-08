@@ -1,6 +1,6 @@
 {
-  "roadsIncludingInternal": 1041,
-  "roadEdges": 324,
+  "roadsIncludingInternal": 1032,
+  "roadEdges": 314,
   "buildings": 129,
   "buildingHeightSources": {
     "osm_height": 10,
@@ -12,10 +12,10 @@
     "water": 14,
     "park": 12
   },
-  "allNetworkTrafficLights": 11,
+  "allNetworkTrafficLights": 16,
   "selectedTrafficLights": 9,
   "rsus": 9,
-  "projectionCheckNodeCount": 113,
+  "projectionCheckNodeCount": 107,
   "projectionMaxErrorM": 0.00781,
   "incompleteAreaRelationsOmitted": [],
   "selectedIntersections": [
@@ -30,6 +30,8 @@
       ],
       "name": "漓江西路 × 太行山路",
       "signalSource": "OSM signal tags interpreted/merged by netconvert; synthetic SUMO timing",
+      "signalSynthetic": false,
+      "corridor": "漓江西路",
       "incomingLaneIds": [
         "320042747#1_0",
         "320042747#1_1",
@@ -111,6 +113,8 @@
       ],
       "name": "漓江西路 × 井冈山路",
       "signalSource": "OSM signal tags interpreted/merged by netconvert; synthetic SUMO timing",
+      "signalSynthetic": false,
+      "corridor": "漓江西路",
       "incomingLaneIds": [
         "141451700#10_0",
         "320042747#5_0",
@@ -192,6 +196,8 @@
       ],
       "name": "漓江西路 × 武夷山路",
       "signalSource": "OSM signal tags interpreted/merged by netconvert; synthetic SUMO timing",
+      "signalSynthetic": false,
+      "corridor": "漓江西路",
       "incomingLaneIds": [
         "320042747#13_0",
         "320042747#13_1",
@@ -273,6 +279,8 @@
       ],
       "name": "漓江西路 × 阿里山路",
       "signalSource": "OSM signal tags interpreted/merged by netconvert; synthetic SUMO timing",
+      "signalSynthetic": false,
+      "corridor": "漓江西路",
       "incomingLaneIds": [
         "320042747#17_0",
         "320042747#17_1",
@@ -345,525 +353,557 @@
       ]
     },
     {
-      "id": "GS_5253945032",
-      "junctionId": "5253945032",
-      "x": 640.93,
-      "y": 395.9,
+      "id": "cluster_3265502515_4249906632",
+      "junctionId": "cluster_3265502515_4249906632",
+      "x": 349.6,
+      "y": 963.41,
       "lonLat": [
-        120.1850414,
-        35.9442709
+        120.1816335,
+        35.9493056
       ],
-      "name": "漓江西路 × 庐山路",
-      "signalSource": "OSM signal tags interpreted/merged by netconvert; synthetic SUMO timing",
+      "name": "珠江路 × 庐山路",
+      "signalSource": "synthetic SUMO traffic light added at a real OSM intersection; no surveyed signal claim",
+      "signalSynthetic": true,
+      "corridor": "珠江路",
       "incomingLaneIds": [
-        "-320048297#2_0",
-        "834910233#25_0",
-        "834910233#25_1",
-        "834910233#25_2",
-        "834910233#25_3"
+        "-320048297#8_0",
+        "320048297#6_0",
+        "425696589#1_0",
+        "425696676#10_0"
       ],
       "shape": [
         [
-          644.48,
-          404.75
+          350.37,
+          979.57
         ],
         [
-          650.09,
-          393.25
+          362.45,
+          953.63
         ],
         [
-          637.22,
-          386.93
+          360.64,
+          952.29
         ],
         [
-          631.55,
-          398.41
+          360.19,
+          951.47
         ],
         [
-          633.35,
-          399.79
+          360.04,
+          950.54
         ],
         [
-          633.8,
-          400.63
+          360.19,
+          949.51
         ],
         [
-          633.94,
-          401.57
+          360.65,
+          948.38
         ],
         [
-          633.78,
-          402.6
+          354.96,
+          945.46
         ],
         [
-          633.31,
-          403.74
+          353.44,
+          947.35
         ],
         [
-          639.0,
-          406.66
+          352.52,
+          947.83
         ],
         [
-          640.46,
-          404.83
+          351.49,
+          948.0
         ],
         [
-          641.32,
-          404.36
+          350.34,
+          947.86
         ],
         [
-          642.28,
-          404.19
+          349.08,
+          947.4
         ],
         [
-          643.33,
-          404.32
+          336.82,
+          973.17
+        ],
+        [
+          338.63,
+          974.53
+        ],
+        [
+          339.1,
+          975.36
+        ],
+        [
+          339.26,
+          976.3
+        ],
+        [
+          339.13,
+          977.35
+        ],
+        [
+          338.71,
+          978.5
+        ],
+        [
+          344.48,
+          981.26
+        ],
+        [
+          345.91,
+          979.45
+        ],
+        [
+          346.82,
+          979.02
+        ],
+        [
+          347.87,
+          978.89
+        ],
+        [
+          349.05,
+          979.07
         ]
       ]
     },
     {
-      "id": "GS_cluster_3685211412_4461902623_6902632341_6902632415",
-      "junctionId": "cluster_3685211412_4461902623_6902632341_6902632415",
-      "x": 2416.34,
-      "y": 1052.89,
+      "id": "cluster_1548278295_4249906635_4249906636_4249906637",
+      "junctionId": "cluster_1548278295_4249906635_4249906636_4249906637",
+      "x": 604.45,
+      "y": 1082.79,
       "lonLat": [
-        120.2044942,
-        35.9506471
+        120.1844178,
+        35.950447
       ],
-      "name": "漓江西路 × 九连山路",
-      "signalSource": "OSM signal tags interpreted/merged by netconvert; synthetic SUMO timing",
+      "name": "珠江路 × 井冈山路",
+      "signalSource": "synthetic SUMO traffic light added at a real OSM intersection; no surveyed signal claim",
+      "signalSynthetic": true,
+      "corridor": "珠江路",
       "incomingLaneIds": [
-        "320042747#27_0",
-        "320042747#27_1",
-        "320042747#27_2",
-        "320042747#27_3",
-        "737282732#4_0",
-        "737282732#4_1",
-        "737282732#4_2",
-        "834910233#3_0",
-        "834910233#3_1",
-        "834910233#3_2",
-        "834910233#3_3"
+        "141451700#6_0",
+        "425696586#4_0",
+        "425696589#3_0",
+        "425696676#7_0"
       ],
       "shape": [
         [
-          2428.94,
-          1070.68
+          608.99,
+          1101.32
         ],
         [
-          2435.22,
-          1042.93
+          622.1,
+          1075.08
         ],
         [
-          2408.2,
-          1035.83
+          620.32,
+          1073.69
         ],
         [
-          2400.71,
-          1063.29
+          619.87,
+          1072.84
         ],
         [
-          2402.76,
-          1064.66
+          619.73,
+          1071.9
         ],
         [
-          2403.4,
-          1065.85
+          619.88,
+          1070.86
         ],
         [
-          2403.78,
-          1067.37
+          620.34,
+          1069.72
         ],
         [
-          2403.9,
-          1069.22
+          605.75,
+          1062.27
         ],
         [
-          2403.76,
-          1071.4
+          604.12,
+          1064.22
         ],
         [
-          2424.61,
-          1073.72
+          603.09,
+          1064.69
         ],
         [
-          2425.29,
-          1071.62
+          601.91,
+          1064.82
         ],
         [
-          2425.91,
-          1070.97
+          600.58,
+          1064.61
         ],
         [
-          2426.73,
-          1070.6
+          599.12,
+          1064.06
         ],
         [
-          2427.74,
-          1070.5
+          586.76,
+          1090.41
+        ],
+        [
+          588.57,
+          1091.76
+        ],
+        [
+          589.03,
+          1092.58
+        ],
+        [
+          589.18,
+          1093.51
+        ],
+        [
+          589.04,
+          1094.55
+        ],
+        [
+          588.59,
+          1095.69
+        ],
+        [
+          603.26,
+          1103.24
+        ],
+        [
+          604.74,
+          1101.4
+        ],
+        [
+          605.64,
+          1100.93
+        ],
+        [
+          606.65,
+          1100.76
+        ],
+        [
+          607.77,
+          1100.89
         ]
       ]
     },
     {
-      "id": "cluster_1517777550_4249906651_4491195657_4491195658",
-      "junctionId": "cluster_1517777550_4249906651_4491195657_4491195658",
-      "x": 410.01,
-      "y": 1471.12,
+      "id": "cluster_1548278338_4249906642",
+      "junctionId": "cluster_1548278338_4249906642",
+      "x": 987.51,
+      "y": 1259.89,
       "lonLat": [
-        120.1821401,
-        35.9538933
+        120.1886037,
+        35.9521413
       ],
-      "name": "长江中路 × 井冈山路",
-      "signalSource": "OSM signal tags interpreted/merged by netconvert; synthetic SUMO timing",
+      "name": "珠江路 × 武夷山路",
+      "signalSource": "synthetic SUMO traffic light added at a real OSM intersection; no surveyed signal claim",
+      "signalSynthetic": true,
+      "corridor": "珠江路",
       "incomingLaneIds": [
-        "138421943#3_0",
-        "138421943#3_1",
-        "141451700#4_0",
-        "425696586#7_0",
-        "452302426#1_0",
-        "452302426#1_1"
+        "-320048294#10_0",
+        "320048294#8_0",
+        "425696589#5_0",
+        "425696676#6_0"
       ],
       "shape": [
         [
-          418.02,
-          1485.21
+          990.95,
+          1274.21
         ],
         [
-          426.34,
-          1467.81
+          998.31,
+          1249.73
         ],
         [
-          423.46,
-          1465.94
+          996.32,
+          1248.65
         ],
         [
-          422.63,
-          1464.92
+          995.74,
+          1247.86
         ],
         [
-          422.2,
-          1463.86
+          995.45,
+          1246.92
         ],
         [
-          422.17,
-          1462.73
+          995.45,
+          1245.81
         ],
         [
-          422.55,
-          1461.56
+          995.72,
+          1244.55
         ],
         [
-          409.43,
-          1455.02
+          989.6,
+          1242.66
         ],
         [
-          407.64,
-          1457.61
+          988.53,
+          1244.63
         ],
         [
-          406.65,
-          1458.35
+          987.79,
+          1245.17
         ],
         [
-          405.6,
-          1458.73
+          986.9,
+          1245.41
         ],
         [
-          404.47,
-          1458.74
+          985.87,
+          1245.37
         ],
         [
-          403.29,
-          1458.39
+          984.7,
+          1245.03
         ],
         [
-          395.85,
-          1475.19
+          974.27,
+          1267.87
         ],
         [
-          398.39,
-          1477.41
+          976.18,
+          1268.88
         ],
         [
-          399.25,
-          1479.18
+          977.67,
+          1269.94
         ],
         [
-          399.84,
-          1481.37
+          978.73,
+          1271.07
         ],
         [
-          400.16,
-          1484.0
+          979.36,
+          1272.26
         ],
         [
-          400.21,
-          1487.06
+          979.57,
+          1273.51
         ],
         [
-          414.31,
-          1487.45
+          979.34,
+          1274.82
         ],
         [
-          414.77,
-          1485.42
+          985.43,
+          1276.8
         ],
         [
-          415.29,
-          1484.89
+          986.59,
+          1274.82
         ],
         [
-          416.01,
-          1484.68
+          987.43,
+          1274.25
         ],
         [
-          416.91,
-          1484.78
+          988.43,
+          1273.96
+        ],
+        [
+          989.6,
+          1273.95
         ]
       ]
     },
     {
-      "id": "cluster_3265502528_4491195660",
-      "junctionId": "cluster_3265502528_4491195660",
-      "x": 851.39,
-      "y": 1683.92,
+      "id": "cluster_1548278337_4249906644_6902632405_6902632858",
+      "junctionId": "cluster_1548278337_4249906644_6902632405_6902632858",
+      "x": 1223.97,
+      "y": 1326.63,
       "lonLat": [
-        120.1869606,
-        35.9559244
+        120.1912012,
+        35.9528037
       ],
-      "name": "长江中路 × 武夷山路",
-      "signalSource": "OSM signal tags interpreted/merged by netconvert; synthetic SUMO timing",
+      "name": "珠江路 × 阿里山路",
+      "signalSource": "synthetic SUMO traffic light added at a real OSM intersection; no surveyed signal claim",
+      "signalSynthetic": true,
+      "corridor": "珠江路",
       "incomingLaneIds": [
-        "-320048294#7_0",
-        "138421943#1_0",
-        "138421943#1_1",
-        "320048294#5_0",
-        "452302426#5_0",
-        "452302426#5_1"
+        "320048284#4_0",
+        "320048284#4_1",
+        "425696589#6_0",
+        "425696676#4_0",
+        "737282722#2_0",
+        "737282722#2_1"
       ],
       "shape": [
         [
-          854.4,
-          1695.47
+          1233.78,
+          1342.57
         ],
         [
-          862.17,
-          1678.82
+          1239.06,
+          1316.14
         ],
         [
-          859.92,
-          1677.18
+          1237.01,
+          1315.28
         ],
         [
-          859.28,
-          1676.14
+          1236.4,
+          1314.59
         ],
         [
-          858.96,
-          1674.96
+          1236.08,
+          1313.74
         ],
         [
-          858.96,
-          1673.63
+          1236.03,
+          1312.71
         ],
         [
-          859.28,
-          1672.16
+          1236.27,
+          1311.52
         ],
         [
-          853.18,
-          1670.25
+          1221.57,
+          1307.21
         ],
         [
-          852.11,
-          1672.18
+          1220.43,
+          1309.52
         ],
         [
-          851.37,
-          1672.69
+          1219.64,
+          1310.22
         ],
         [
-          850.5,
-          1672.89
+          1218.72,
+          1310.62
         ],
         [
-          849.5,
-          1672.78
+          1217.64,
+          1310.72
         ],
         [
-          848.36,
-          1672.37
+          1216.43,
+          1310.52
         ],
         [
-          840.58,
-          1689.02
+          1209.02,
+          1336.48
         ],
         [
-          842.83,
-          1690.65
+          1211.08,
+          1337.53
         ],
         [
-          843.47,
-          1691.68
+          1211.69,
+          1338.28
         ],
         [
-          843.79,
-          1692.85
+          1212.04,
+          1339.19
         ],
         [
-          843.78,
-          1694.16
+          1212.1,
+          1340.25
         ],
         [
-          843.45,
-          1695.62
+          1211.9,
+          1341.46
         ],
         [
-          849.54,
-          1697.58
+          1226.69,
+          1345.42
         ],
         [
-          850.63,
-          1695.65
+          1227.94,
+          1343.36
         ],
         [
-          851.37,
-          1695.15
+          1228.98,
+          1342.74
         ],
         [
-          852.25,
-          1694.95
+          1230.31,
+          1342.41
         ],
         [
-          853.25,
-          1695.06
+          1231.9,
+          1342.35
         ]
       ]
     },
     {
-      "id": "cluster_3265502529_4491195654_6902632310_941471471",
-      "junctionId": "cluster_3265502529_4491195654_6902632310_941471471",
-      "x": 1096.66,
-      "y": 1798.26,
+      "id": "cluster_13958144640_13958144648",
+      "junctionId": "cluster_13958144640_13958144648",
+      "x": 1377.94,
+      "y": 1355.24,
       "lonLat": [
-        120.1896407,
-        35.9570177
+        120.1928974,
+        35.9531012
       ],
-      "name": "长江中路 × 阿里山路",
-      "signalSource": "OSM signal tags interpreted/merged by netconvert; synthetic SUMO timing",
+      "name": "珠江路 × 王屋山路",
+      "signalSource": "synthetic SUMO traffic light added at a real OSM intersection; no surveyed signal claim",
+      "signalSynthetic": true,
+      "corridor": "珠江路",
       "incomingLaneIds": [
-        "-320048295_0",
-        "320048284#7_0",
-        "320048284#7_1",
-        "452302426#6_0",
-        "452302426#6_1",
-        "543852189#10_0",
-        "543852189#10_1"
+        "-1531451324#1_0",
+        "425696589#8_0",
+        "425696676#3_0"
       ],
       "shape": [
         [
-          1103.94,
-          1814.55
+          1382.56,
+          1369.11
         ],
         [
-          1113.95,
-          1792.38
+          1387.05,
+          1343.82
         ],
         [
-          1111.83,
-          1791.31
+          1372.89,
+          1341.3
         ],
         [
-          1110.16,
-          1790.19
+          1368.38,
+          1366.58
         ],
         [
-          1108.94,
-          1789.04
+          1370.49,
+          1367.4
         ],
         [
-          1108.17,
-          1787.85
+          1371.14,
+          1368.08
         ],
         [
-          1107.85,
-          1786.62
+          1371.54,
+          1368.94
         ],
         [
-          1107.97,
-          1785.36
+          1371.68,
+          1369.98
         ],
         [
-          1094.1,
-          1781.64
+          1371.55,
+          1371.2
         ],
         [
-          1092.96,
-          1784.17
+          1377.83,
+          1372.44
         ],
         [
-          1092.2,
-          1784.88
+          1378.71,
+          1370.27
         ],
         [
-          1091.3,
-          1785.22
+          1379.41,
+          1369.59
         ],
         [
-          1090.27,
-          1785.2
+          1380.28,
+          1369.16
         ],
         [
-          1089.11,
-          1784.82
-        ],
-        [
-          1080.81,
-          1802.15
-        ],
-        [
-          1085.05,
-          1804.36
-        ],
-        [
-          1088.4,
-          1806.53
-        ],
-        [
-          1090.86,
-          1808.67
-        ],
-        [
-          1092.43,
-          1810.77
-        ],
-        [
-          1093.1,
-          1812.84
-        ],
-        [
-          1092.87,
-          1814.88
-        ],
-        [
-          1098.95,
-          1816.9
-        ],
-        [
-          1100.06,
-          1814.95
-        ],
-        [
-          1100.82,
-          1814.41
-        ],
-        [
-          1101.72,
-          1814.17
-        ],
-        [
-          1102.76,
-          1814.21
+          1381.34,
+          1369.0
         ]
       ]
     }
@@ -874,34 +914,38 @@
       "coast_east",
       "coast_west",
       "side_1",
-      "side_4"
+      "side_2"
     ],
     "RSU_2": [
       "coast_east",
       "coast_west",
       "side_1",
-      "side_4"
+      "side_2"
     ],
     "RSU_3": [
       "coast_east",
       "coast_west",
       "side_1",
+      "side_2",
       "side_4"
     ],
     "RSU_4": [
       "coast_east",
       "coast_west",
       "side_1",
+      "side_2",
+      "side_3",
       "side_4"
     ],
     "RSU_5": [
-      "coast_west",
+      "north_east",
+      "north_west",
       "side_4"
     ],
     "RSU_6": [
-      "coast_east",
-      "coast_west",
-      "side_2"
+      "north_east",
+      "north_west",
+      "side_4"
     ],
     "RSU_7": [
       "north_east",
@@ -910,78 +954,112 @@
     "RSU_8": [
       "north_east",
       "north_west",
-      "side_2"
+      "side_1",
+      "side_2",
+      "side_3"
     ],
     "RSU_9": [
       "north_east",
       "north_west",
-      "side_4"
+      "side_1",
+      "side_2",
+      "side_3"
     ]
   },
-  "focusWidthM": 2486.33,
-  "focusHeightM": 2181.09,
+  "syntheticSignals": 5,
+  "adjacentCorridorDistances": [
+    {
+      "crossRoad": "井冈山路",
+      "from": "漓江西路 × 井冈山路",
+      "to": "珠江路 × 井冈山路",
+      "junctionCenterDistanceM": 641.98
+    },
+    {
+      "crossRoad": "武夷山路",
+      "from": "漓江西路 × 武夷山路",
+      "to": "珠江路 × 武夷山路",
+      "junctionCenterDistanceM": 650.43
+    },
+    {
+      "crossRoad": "阿里山路",
+      "from": "漓江西路 × 阿里山路",
+      "to": "珠江路 × 阿里山路",
+      "junctionCenterDistanceM": 624.97
+    }
+  ],
+  "focusWidthM": 1529.16,
+  "focusHeightM": 1738.07,
   "verification": {
     "ranToTime": "599.80",
     "lastSummary": {
       "time": "599.80",
-      "loaded": "302",
-      "inserted": "302",
-      "running": "133",
+      "loaded": "280",
+      "inserted": "280",
+      "running": "96",
       "waiting": "0",
-      "ended": "169",
-      "arrived": "169",
+      "ended": "184",
+      "arrived": "184",
       "collisions": "0",
       "teleports": "0",
-      "halting": "3",
+      "halting": "8",
       "stopped": "0",
-      "meanWaitingTime": "0.00",
-      "meanTravelTime": "238.21",
-      "meanSpeed": "13.74",
-      "meanSpeedRelative": "0.51",
+      "meanWaitingTime": "0.01",
+      "meanTravelTime": "206.27",
+      "meanSpeed": "13.69",
+      "meanSpeedRelative": "0.50",
       "discarded": "0",
-      "duration": "1"
+      "duration": "0"
     },
-    "completedTrips": 169,
-    "maxRunningVehicles": 144,
+    "completedTrips": 184,
+    "maxRunningVehicles": 110,
     "collisionWarnings": 0,
     "teleportWarnings": 0,
     "actualIntersectionApproaches": {
       "RSU_1": {
-        "sampledVehicleSeconds": 5030.36,
-        "approachEdgeExits": 137
+        "sampledVehicleSeconds": 4819.07,
+        "approachEdgeExits": 128
       },
       "RSU_2": {
-        "sampledVehicleSeconds": 6403.54,
-        "approachEdgeExits": 138
+        "sampledVehicleSeconds": 6077.4,
+        "approachEdgeExits": 127
       },
       "RSU_3": {
-        "sampledVehicleSeconds": 3263.03,
-        "approachEdgeExits": 138
+        "sampledVehicleSeconds": 2911.36,
+        "approachEdgeExits": 145
       },
       "RSU_4": {
-        "sampledVehicleSeconds": 4905.23,
-        "approachEdgeExits": 135
+        "sampledVehicleSeconds": 7238.94,
+        "approachEdgeExits": 165
       },
       "RSU_5": {
-        "sampledVehicleSeconds": 1278.45,
-        "approachEdgeExits": 54
+        "sampledVehicleSeconds": 2681.43,
+        "approachEdgeExits": 98
       },
       "RSU_6": {
-        "sampledVehicleSeconds": 6434.29,
+        "sampledVehicleSeconds": 2203.75,
         "approachEdgeExits": 92
       },
       "RSU_7": {
-        "sampledVehicleSeconds": 2197.88,
-        "approachEdgeExits": 70
+        "sampledVehicleSeconds": 2064.79,
+        "approachEdgeExits": 75
       },
       "RSU_8": {
-        "sampledVehicleSeconds": 2700.33,
-        "approachEdgeExits": 93
+        "sampledVehicleSeconds": 4714.49,
+        "approachEdgeExits": 130
       },
       "RSU_9": {
-        "sampledVehicleSeconds": 3381.41,
-        "approachEdgeExits": 92
+        "sampledVehicleSeconds": 4719.91,
+        "approachEdgeExits": 137
       }
     }
+  },
+  "inputSha256": {
+    "scripts/build_map.py": "9173240724f0d42e2f87b25b5a33d210de7b8388235046b3421e01e7458bcf10",
+    "data/tangdao.osm.xml": "7d008dd5adab60d4811444d9c331886782751e8431d813ba450227286f42754a",
+    "data/synthetic-signals.nod.xml": "d3c6983aa1aa05afdc04a3ec863bd8f509b4c131630b7fc50465f15a68a7f31c",
+    "data/scene.json": "400aaa17c22db54c18e64f85ba219cdde50e68620b47bd8d33871c691d6e75e4",
+    "scenario/tangdao.net.xml": "f51f9327c5e9c1996470f050d297de62cf715faa10f6c6ec0a8f25c271435557",
+    "scenario/traffic.rou.xml": "3c2c474c595cbb42d38759672d0b158e172dc6aecc5a884d0051720e1e6b63bb",
+    "scenario/tangdao.sumocfg": "03131881e10df3e6520b753d45840b4cda63d6ce809070b6904144089ace2af9"
   }
 }

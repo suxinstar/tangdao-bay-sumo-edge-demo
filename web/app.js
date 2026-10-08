@@ -144,7 +144,7 @@ function updateCars(t){
   updateCarHighlight();
 }
 
-function effectStages(task,time){let flags=0;if(time>=number(task.created)&&time<number(task.created)+2.5)flags|=1;if(task.origin!==task.target){if(time>=number(task.created)&&time<number(task.txEnd))flags|=2;if(time>=number(task.finish)&&time<number(task.returnEnd))flags|=4}return flags}
+function effectStages(task,time){if(task.dropped||task.status==='dropped')return 0;let flags=0;if(time>=number(task.created)&&time<number(task.created)+2.5)flags|=1;if(task.origin!==task.target){if(time>=number(task.created)&&time<number(task.txEnd))flags|=2;if(time>=number(task.finish)&&time<number(task.returnEnd))flags|=4}return flags}
 function visibleEffectStages(task,flags){if(flags&1){effectPoint.set(number(task.x)-center.x,.45,-(number(task.y)-center.y));effectSphere.set(effectPoint,55);if(!viewFrustum.intersectsSphere(effectSphere))flags&=~1}if(flags&6){const from=rsuObjects.get(task.origin),to=rsuObjects.get(task.target);if(!from||!to)return flags&1;effectPoint.copy(from.point).lerp(to.point,.5);effectPoint.y+=30;effectSphere.set(effectPoint,from.point.distanceTo(to.point)/2+70);if(!viewFrustum.intersectsSphere(effectSphere))flags&=~6}return flags}
 function allocateEffect(){const group=new THREE.Group(),wave=new THREE.Mesh(sharedEffects.wave,new THREE.MeshBasicMaterial({color:COLORS.teal,transparent:true,opacity:.6,side:THREE.DoubleSide,depthWrite:false}));wave.rotation.x=-Math.PI/2;const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(new Float32Array(25*3),3));const line=new THREE.Line(geometry,new THREE.LineBasicMaterial({color:COLORS.blue,transparent:true,opacity:.6})),packet=new THREE.Mesh(sharedEffects.packet,new THREE.MeshBasicMaterial({color:0x91eaff}));group.add(wave,line,packet);layers.effects.add(group);return{group,wave,line,packet,curve:new THREE.QuadraticBezierCurve3(new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()),task:null,stage:0}}
 function releaseEffect(effect){effect.group.visible=false;effect.task=null;effect.stage=0;effectPool.push(effect)}
@@ -164,20 +164,28 @@ function buildRsuCards(){const list=$('rsu-list');list.replaceChildren();for(con
 function updateDashboard(state){
   const names={running:'运行中',paused:'已暂停',finished:'已完成',error:'异常'};$('run-state').textContent=names[state.status]||state.status||'准备中';$('sim-clock').textContent=clockFormat(number(state.simTime));$('sim-seconds').textContent=number(state.simTime).toFixed(1)+' s';$('play-button').textContent=state.status==='running'?'Ⅱ 暂停':'▶ 继续';$('play-button').disabled=state.status==='error'||state.status==='finished';$('reset-button').disabled=false;
   if(document.activeElement!==$('speed-select'))$('speed-select').value=String(state.speed||1);if(document.activeElement!==$('scheduler-select'))$('scheduler-select').value=state.scheduler||'least_finish';
-  const m=state.metrics||{};$('metric-vehicles').textContent=String(m.vehicles??state.vehicles?.length??0);$('metric-completed').replaceChildren(document.createTextNode(String(m.completed??0)+' '));const total=document.createElement('em');total.textContent='/ '+String(m.sensed??0);$('metric-completed').append(total);$('metric-offloaded').textContent=String(m.offloaded??0);$('offload-ratio').textContent=number(m.sensed)>0?`占感知任务 ${(number(m.offloaded)/number(m.sensed)*100).toFixed(0)}%`:'等待任务';$('metric-latency').replaceChildren(document.createTextNode(m.meanLatency==null?'— ':number(m.meanLatency).toFixed(2)+' '));const unit=document.createElement('em');unit.textContent='s';$('metric-latency').append(unit);$('metric-signals').textContent=String(m.signalActions??0);
+  const m=state.metrics||{};$('metric-vehicles').textContent=String(m.vehicles??state.vehicles?.length??0);$('metric-completed').replaceChildren(document.createTextNode(String(m.completed??0)+' '));const total=document.createElement('em');total.textContent='/ '+String(m.sensed??0);$('metric-completed').append(total);$('metric-offloaded').textContent=String(m.offloaded??0);$('offload-ratio').textContent=number(m.sensed)>0?`占感知任务 ${(number(m.offloaded)/number(m.sensed)*100).toFixed(0)}%`:'等待任务';if(m.dropped)$('offload-ratio').textContent+=` · 丢弃 ${m.dropped}`;$('metric-latency').replaceChildren(document.createTextNode(m.meanLatency==null?'— ':number(m.meanLatency).toFixed(2)+' '));const unit=document.createElement('em');unit.textContent='s';$('metric-latency').append(unit);$('metric-signals').textContent=String(m.signalActions??0);
   const active=(state.tasks||[]).filter(t=>t.status!=='done').length;$('scene-status-text').textContent=`${state.status==='running'?'实时同步':names[state.status]||'同步'} · ${state.vehicles?.length??0} 辆车 · ${active} 项进行中`;
   for(const rsu of state.rsus||[]){const node=rsuObjects.get(rsu.id);if(node){node.busy=!!rsu.busy;node.queue=number(rsu.queue);node.label.classList.toggle('busy',node.busy);node.label.querySelector('span').textContent=node.busy?`计算中 · 排队 ${node.queue}`:`空闲 · 排队 ${node.queue}`;const card=[...$('rsu-list').children].find(c=>c.dataset.id===rsu.id);if(card){card.classList.toggle('busy',node.busy);card.querySelector('small').textContent=node.busy?'● 计算中':'空闲';card.querySelector('.q').textContent=rsu.queue??0;card.querySelector('.c').textContent=rsu.completed??0;card.querySelector('.o').textContent=rsu.offloaded??0;card.querySelector('.queue-bar i').style.width=`${Math.min(100,node.queue*12+(node.busy?8:0))}%`}}}
   for(const data of state.signals||[]){if(!signalObjects.has(data.id))createSignal(data);const signal=signalObjects.get(data.id);const stateText=data.state||'';const links=data.links?.length?data.links:[{x:data.x+9,y:data.y+8,angle:0,linkIndex:0}];const visited=new Set();for(const link of links){if(visited.has(link.linkIndex))continue;visited.add(link.linkIndex);const head=signal.heads.get(link.linkIndex)||signalHead(signal,link);const char=link.state??stateText[link.linkIndex]??'r';const activeColor=/[gG]/.test(char)?2:/[yY]/.test(char)?1:0;colorSignal(head,activeColor)}if(data.mode==='extended'&&signal.mode!=='extended')signal.changedAt=number(state.simTime);signal.mode=data.mode;signal.state=stateText}
   flushSignalBatch();labelsDirty=true;updateFollowPanel();updateEvents(selectedEvents(state));updatePipeline(state);
 }
 function friendlyEventText(text){let output=String(text||'');for(const junction of sceneData?.intersections||[])if(junction.name)output=output.split(junction.id).join(junction.name);return output}
-function updateEvents(events){const signature=(follow.id||'all')+'#'+selectedTaskId+'#'+events.map(e=>e.id).join(',');if(signature===lastEventKey)return;lastEventKey=signature;const list=$('event-list');list.replaceChildren();const names={sense:'感知',dispatch:'调度',complete:'完成',signal:'信号响应',signal_skip:'保持配时',return:'回传',error:'异常'};for(const event of events.slice(-35).reverse()){const item=document.createElement('div');item.className='event-item';item.dataset.type=event.type;item.classList.toggle('selected',event.taskId===selectedTaskId);const time=document.createElement('span');time.className='event-time';time.textContent=number(event.time).toFixed(1);const body=document.createElement('div');body.className='event-body';const tag=document.createElement('span');tag.className='event-type';tag.textContent=names[event.type]||event.type||'事件';body.append(tag,document.createTextNode(friendlyEventText(event.text)));item.append(time,body);if(event.taskId){item.title='查看这项任务的流程';item.addEventListener('click',()=>{selectedTaskId=event.taskId;if(follow.id){follow.pinned=true;updateFollowPanel()}updatePipeline(latest);for(const other of list.children)other.classList.remove('selected');item.classList.add('selected')})}list.append(item)}$('event-count').textContent=(follow.id?'单车 · ':'')+(events.length?`最近 ${Math.min(35,events.length)} 条`:'实时');if(!events.length){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='车辆进入感知区后，事件将在这里出现。';list.append(empty)}}
+function updateEvents(events){const signature=(follow.id||'all')+'#'+selectedTaskId+'#'+events.map(e=>e.id).join(',');if(signature===lastEventKey)return;lastEventKey=signature;const list=$('event-list');list.replaceChildren();const names={sense:'感知',dispatch:'调度',complete:'完成',signal:'信号响应',signal_skip:'保持配时',return:'回传',drop:'策略丢弃',error:'异常'};for(const event of events.slice(-35).reverse()){const item=document.createElement('div');item.className='event-item';item.dataset.type=event.type;item.classList.toggle('selected',event.taskId===selectedTaskId);const time=document.createElement('span');time.className='event-time';time.textContent=number(event.time).toFixed(1);const body=document.createElement('div');body.className='event-body';const tag=document.createElement('span');tag.className='event-type';tag.textContent=names[event.type]||event.type||'事件';body.append(tag,document.createTextNode(friendlyEventText(event.text)));item.append(time,body);if(event.taskId){item.title='查看这项任务的流程';item.addEventListener('click',()=>{selectedTaskId=event.taskId;if(follow.id){follow.pinned=true;updateFollowPanel()}updatePipeline(latest);for(const other of list.children)other.classList.remove('selected');item.classList.add('selected')})}list.append(item)}$('event-count').textContent=(follow.id?'单车 · ':'')+(events.length?`最近 ${Math.min(35,events.length)} 条`:'实时');if(!events.length){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='车辆进入感知区后，事件将在这里出现。';list.append(empty)}}
 function updatePipeline(state){
   if(!state)return;
   const task=taskForView(state),steps=[...$('pipeline').querySelectorAll('[data-stage]')];
   const defaults=['生成声学任务','本地 / 跨 RSU','队列与服务时间','完成后才生效','保持安全相位'];
   steps.forEach((el,i)=>{el.classList.remove('done','active');el.querySelector('small').textContent=defaults[i]});
   if(!task){$('trace-label').textContent=follow.id?`${follow.id} · 等待感知触发`:'等待第一项任务';$('pipeline-detail').textContent=follow.id?'车辆进入配置的感知半径且位于受控进口后生成任务。':'锁定一辆车，即可沿它的任务查看整个过程。';return}
+  if(task.dropped||task.status==='dropped'){
+    steps[0].classList.add('done');steps[1].classList.add('active');
+    steps[1].querySelector('small').textContent='MEO 决策：丢弃';
+    for(let i=2;i<5;i++)steps[i].querySelector('small').textContent='未执行';
+    $('trace-label').textContent=`${task.vehicleId} / ${task.id} · ${task.origin} · 策略丢弃`;
+    $('pipeline-detail').textContent=`${number(task.created).toFixed(1)} s 感知 · ${task.dropReason}。不占计算队列，不回传结果，不触发信号。`;
+    return;
+  }
   const now=number(follow.id&&follow.detail?follow.detail.simTime:state.simTime),events=selectedEvents(state);
   const signalEvent=events.find(e=>(e.type==='signal'||e.type==='signal_skip')&&e.taskId===task.id);
   const returned=task.status==='done'||task.returned===true;
@@ -191,10 +199,12 @@ function updatePipeline(state){
   steps[3].querySelector('small').textContent=returned?'已回传源节点':`返回 ${task.origin}`;
   steps[4].querySelector('small').textContent=task.controlApplied===true?`绿灯 +${number(task.extensionS).toFixed(1)} s`:task.controlApplied===false?'条件检查 · 保持配时':checked?'已记录决策':returned?'等待条件检查':'等待结果回传';
   const queue=Math.max(0,task.start-task.txEnd),compute=Math.max(0,task.finish-task.start);
-  $('pipeline-detail').textContent=`${number(task.created).toFixed(1)} s 感知 · 预约排队 ${queue.toFixed(1)} s · 配置计算 ${compute.toFixed(1)} s · ${returned?'已于 '+number(task.observedReturnTime??task.returnEnd).toFixed(1):'预计 '+number(task.returnEnd).toFixed(1)} s 回传${task.controlApplied===false?' · '+task.controlReason:''}`;
+  $('pipeline-detail').textContent=`${number(task.created).toFixed(1)} s 感知${task.policyDecision?' · MEO '+task.policyDecision.modelId+' 资源档位':''} · 预约排队 ${queue.toFixed(1)} s · 配置计算 ${compute.toFixed(1)} s · ${returned?'已于 '+number(task.observedReturnTime??task.returnEnd).toFixed(1):'预计 '+number(task.returnEnd).toFixed(1)} s 回传${task.controlApplied===false?' · '+task.controlReason:''}`;
 }
 
-const TASK_NAMES={transmitting:'上传 / 传输',queued:'排队等待',processing:'计算中',returning:'结果回传',done:'处理完成'};
+const terminalTask=t=>t.status==='done'||t.status==='dropped';
+const taskRoute=t=>t.dropped||t.status==='dropped'?`${t.origin} · 策略丢弃`:`${t.origin} → ${t.target}`;
+const TASK_NAMES={dropped:'策略丢弃',transmitting:'上传 / 传输',queued:'排队等待',processing:'计算中',returning:'结果回传',done:'处理完成'};
 function currentVehicle(){return (latest?.vehicles||[]).find(v=>v.id===follow.id)||null}
 function vehicleTasks(){return follow.detail?.tasks||(latest?.tasks||[]).filter(t=>t.vehicleId===follow.id)}
 function taskForView(state){
@@ -202,12 +212,12 @@ function taskForView(state){
   let task=tasks.find(t=>t.id===selectedTaskId);
   if(follow.id){
     const now=follow.detail?.simTime??state.simTime;
-    if(!task||(!follow.pinned&&task.status==='done'&&now-number(task.controlCheckedTime??task.returnEnd)>4))
-      task=tasks.find(t=>t.status!=='done')||tasks.at(-1);
+    if(!task||(!follow.pinned&&terminalTask(task)&&now-number(task.controlCheckedTime??task.returnEnd??task.created)>4))
+      task=tasks.find(t=>!terminalTask(t))||tasks.at(-1);
     selectedTaskId=task?.id||null;
     return task;
   }
-  return task||tasks.find(t=>t.id===state.trace?.taskId)||[...tasks].reverse().find(t=>t.status!=='done')||tasks.at(-1);
+  return task||tasks.find(t=>t.id===state.trace?.taskId)||[...tasks].reverse().find(t=>!terminalTask(t))||tasks.at(-1);
 }
 function selectedEvents(state){
   if(!follow.id)return state.events||[];
@@ -287,7 +297,7 @@ function updateFollowPanel(){
   updateVehicleOptions();
   const car=currentVehicle(),last=car||follow.detail?.vehicle,task=follow.id&&latest?taskForView(latest):null,tasks=vehicleTasks();
   const departed=!!follow.id&&!car&&follow.detail?.status==='departed';
-  const summary=follow.detail?.summary||{sensed:tasks.length,completed:tasks.filter(t=>t.status==='done').length,offloaded:tasks.filter(t=>t.offloaded).length,pending:tasks.filter(t=>t.status!=='done').length};
+  const summary=follow.detail?.summary||{sensed:tasks.length,completed:tasks.filter(t=>t.status==='done').length,offloaded:tasks.filter(t=>t.offloaded).length,pending:tasks.filter(t=>!terminalTask(t)).length,dropped:tasks.filter(t=>t.status==='dropped').length};
   $('vehicle-id').textContent=follow.id||'未锁定';
   $('vehicle-speed').textContent=car?(number(car.speed)*3.6).toFixed(1)+' km/h':departed?'已驶离':'—';
   $('vehicle-road').textContent=roadName(last);
@@ -298,18 +308,18 @@ function updateFollowPanel(){
   $('tracking-badge').hidden=!follow.id;
   $('tracking-label').textContent=`${follow.id} / ${departed?'已驶离 · 保留任务':follow.enabled?'FOLLOW LOCK':'自由视角'}`;
   $('vehicle-journey').textContent=follow.error?follow.error:!follow.id?(follow.armed?'仿真开始后将锁定一辆车，不自动切换目标。':'选中车辆后，查看它在各 RSU 触发的完整任务链。'):
-    `${departed?'车辆已驶离路网；任务继续处理。':!tasks.length?'尚未进入受控进口的感知区。':''}感知 ${summary.sensed} 项 · 卸载 ${summary.offloaded} 项 · 待回传 ${summary.pending} 项。`;
-  $('vehicle-signal').textContent=task?(task.controlApplied===true?`信号响应：匹配绿灯延长 ${number(task.extensionS).toFixed(1)} s`:
+    `${departed?'车辆已驶离路网；任务继续处理。':!tasks.length?'尚未进入受控进口的感知区。':''}感知 ${summary.sensed} 项 · 卸载 ${summary.offloaded} 项 · 待回传 ${summary.pending} 项${summary.dropped?' · 策略丢弃 '+summary.dropped+' 项':''}。`;
+  $('vehicle-signal').textContent=task?(task.dropped?`${task.dropReason}；不生成计算结果，不触发信号。`:task.controlApplied===true?`信号响应：匹配绿灯延长 ${number(task.extensionS).toFixed(1)} s`:
     task.controlApplied===false?`保持配时：${task.controlReason||'控制条件未满足'}`:`${task.origin} → ${task.target} → ${task.origin} · ${TASK_NAMES[task.status]||'等待任务状态'}，结果回传后检查信号。`):'信号决策将在任务结果回传后显示。';
   const taskSelect=$('vehicle-task-select');
   const signature=tasks.map(t=>`${t.id}:${t.status}:${t.controlApplied}`).join('|')+'#'+selectedTaskId;
   if(signature!==follow.historyKey){
     follow.historyKey=signature;taskSelect.replaceChildren();
     const automatic=document.createElement('option');automatic.value='';automatic.textContent='自动展示当前任务';taskSelect.append(automatic);
-    for(const t of tasks){const o=document.createElement('option');o.value=t.id;o.textContent=`${t.id} · ${t.origin} → ${t.target} · ${TASK_NAMES[t.status]||t.status}`;taskSelect.append(o)}
+    for(const t of tasks){const o=document.createElement('option');o.value=t.id;o.textContent=`${t.id} · ${taskRoute(t)} · ${TASK_NAMES[t.status]||t.status}`;taskSelect.append(o)}
     const list=$('vehicle-task-list');list.replaceChildren();
     for(const t of tasks){const item=document.createElement('button');item.type='button';item.className='vehicle-task-item';item.classList.toggle('selected',t.id===selectedTaskId);item.dataset.task=t.id;
-      const heading=document.createElement('b');heading.textContent=`${t.id} / ${t.origin} → ${t.target}`;
+      const heading=document.createElement('b');heading.textContent=`${t.id} / ${taskRoute(t)}`;
       const description=document.createElement('span');description.textContent=`${number(t.created).toFixed(1)} s 感知 · ${TASK_NAMES[t.status]||t.status}${t.controlApplied===true?' · 绿灯 +'+number(t.extensionS).toFixed(1)+' s':t.controlApplied===false?' · 保持配时':''}`;
       item.append(heading,description);item.addEventListener('click',()=>pinVehicleTask(t.id));list.append(item)}
     if(!tasks.length){const empty=document.createElement('p');empty.className='empty-state';empty.textContent='任务会按真实触发顺序保留在这里。';list.append(empty)}
@@ -353,7 +363,7 @@ function updateFollowCamera(t){
     if(followMarker)followMarker.position.copy(followPoint);
     if(follow.enabled){followDelta.copy(followPoint).sub(controls.target);if(followDelta.lengthSq()>.00001){camera.position.add(followDelta);controls.target.copy(followPoint);labelsDirty=true}}
   }
-  if(followLink){const task=latest&&follow.id?taskForView(latest):null,from=task&&rsuObjects.get(task.origin),to=task&&rsuObjects.get(task.target);followLink.visible=!!(from&&to&&task.status!=='done');
+  if(followLink){const task=latest&&follow.id?taskForView(latest):null,from=task&&rsuObjects.get(task.origin),to=task&&rsuObjects.get(task.target);followLink.visible=!!(from&&to&&!terminalTask(task));
     if(followLink.visible){const attr=followLink.geometry.attributes.position;attr.setXYZ(0,from.point.x,from.point.y,from.point.z);attr.setXYZ(1,(from.point.x+to.point.x)/2,Math.max(from.point.y,to.point.y)+20,(from.point.z+to.point.z)/2);attr.setXYZ(2,to.point.x,to.point.y,to.point.z);attr.needsUpdate=true}}
 }
 function setupVehiclePicking(){

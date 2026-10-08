@@ -1,5 +1,5 @@
 {
-  "packageVersion": "1.4.0",
+  "packageVersion": "1.5.0",
   "runtimeMode": "auto-prepare missing dependencies",
   "files": [
     {
@@ -14,48 +14,48 @@
     },
     {
       "path": "CONTRACT.md",
-      "bytes": 8695,
-      "sha256": "7f676c40e7d70790917354bfa5b086edf35ea3648095c33bdae2b17a63d4fc0e"
+      "bytes": 9293,
+      "sha256": "6f1667643f20d0e34eeaa32b20a88374f29614ada91a425a368d134b933c964a"
     },
     {
       "path": "data/build_commands.json",
-      "bytes": 1379,
-      "sha256": "d4bb4d4090c0391ffb18543753a9b4868deb3958a1b4888b7afa594991acaeb3"
+      "bytes": 1439,
+      "sha256": "c2c0cc60ab5e22b0020e7f3135c1e011ef5bff204e5e77b4281c7a9696727dc0"
     },
     {
       "path": "data/build_stats.json",
-      "bytes": 18670,
-      "sha256": "be08276bb31cc6ea653f82ecf254ecbf4251bba22ae4c2325094f80904ab4859"
+      "bytes": 20958,
+      "sha256": "7fbfbef23c1dc175858961ba4b13d86194cca33f8fdc0e911ba5499310773e91"
     },
     {
       "path": "data/edge_traffic.xml",
-      "bytes": 23261,
-      "sha256": "ddaeae958c4e982ee4384293cad07cdf8aacef1c7786fded1fc735995c59011d"
+      "bytes": 13214,
+      "sha256": "65961ab4b8ed05187a53aa290edda3ee004c367ee0a89b2116b76631e8f0c800"
     },
     {
       "path": "data/joined-junctions.xml",
-      "bytes": 2926,
-      "sha256": "fb419202e3e7d2258760b0c54ccd4a57aae1572f11e30553aa66ff20acc65eb2"
+      "bytes": 3077,
+      "sha256": "6b2b89929ce7bd2052391894abfb0da83427bdc969e571f20beb3e6e5ae93654"
     },
     {
       "path": "data/map_preview.png",
-      "bytes": 93235,
-      "sha256": "9a02d81e638eb3f00d3dbc770d0b449d70031b7046ca2665b4a8c106e5a1cd6f"
+      "bytes": 305177,
+      "sha256": "4340d08fb1ed48269bfb60ffa6ca5b91666268cc0b26fa2f066349af2aeeae49"
     },
     {
       "path": "data/map_preview.svg",
-      "bytes": 163086,
-      "sha256": "75ccd0b96310e8ada06448eb65486a7ef3665fd6a3f27ea3599d2c75e49b4a91"
+      "bytes": 163767,
+      "sha256": "72538f40cb66af1544fd2684eb4a673bf1efb45949ff9fcb6d970186a80cc2e8"
     },
     {
       "path": "data/netconvert.log",
-      "bytes": 7231,
-      "sha256": "33bab54152ce6c835bedb7fe003986dfb353d41c85a1db825e37ca6478ace4f9"
+      "bytes": 7559,
+      "sha256": "203def451a8532403016d4d0e8d442554ca44dc63282ac7cfa7277de321db1e0"
     },
     {
       "path": "data/scene.json",
-      "bytes": 628949,
-      "sha256": "4ba5a1908fcd950e58fdf533d78f75557c7aa87b7814f7e94136d8f0a32abc81"
+      "bytes": 628968,
+      "sha256": "400aaa17c22db54c18e64f85ba219cdde50e68620b47bd8d33871c691d6e75e4"
     },
     {
       "path": "data/source_manifest.json",
@@ -69,13 +69,18 @@
     },
     {
       "path": "data/sumo_summary.xml",
-      "bytes": 821511,
-      "sha256": "91e17da9567d089b4789864e638a238c1687662b66d08527d271367d96ee3770"
+      "bytes": 820630,
+      "sha256": "d68c0f3793d375193081b104f8704f2bbe98d1981a468f351b777077d1e1bf38"
     },
     {
       "path": "data/sumo_validation.log",
-      "bytes": 567,
-      "sha256": "a655e0a9b0620674aa5841e1d8d7ebce966adb3c055422820013785fdc441409"
+      "bytes": 566,
+      "sha256": "7cc90d2ab79ea46f8153b321f21c24ef58818e8d12199ff8aa5cb5d27111e5f4"
+    },
+    {
+      "path": "data/synthetic-signals.nod.xml",
+      "bytes": 923,
+      "sha256": "d3c6983aa1aa05afdc04a3ec863bd8f509b4c131630b7fc50465f15a68a7f31c"
     },
     {
       "path": "data/tangdao.osm.xml",
@@ -84,13 +89,13 @@
     },
     {
       "path": "data/traffic_manifest.json",
-      "bytes": 4324,
-      "sha256": "086095f21d99b5e873b45477f7408f0fd07cf3e3157799563848e47a86d312f7"
+      "bytes": 3938,
+      "sha256": "66298e91fd90dc0c3479b07cf5d1ce9a77434d7c47fe342a823afb564dc3a49a"
     },
     {
       "path": "data/tripinfo.xml",
-      "bytes": 74444,
-      "sha256": "3299978694092bfd0ada834fafcaa01eed89f8226b59e338eb5405d27a26d37e"
+      "bytes": 81076,
+      "sha256": "4aabed73e8e25c074677c3a63c142153a130e2c85ae59b73a7f6fa4b51101fd6"
     },
     {
       "path": "docs/AUDIO_SOURCES.md",
@@ -98,9 +103,14 @@
       "sha256": "f85b8f8baf7ca7137ec48e3bcba709e0e3d1591a1d83c094815e8983c607896e"
     },
     {
+      "path": "docs/MEO_SCHEDULER.md",
+      "bytes": 5215,
+      "sha256": "8518a9d481d59c8461a7a0213cf2e85d2c0364dca33d29415b5bba5269985322"
+    },
+    {
       "path": "docs/MODEL_INTEGRATION.md",
-      "bytes": 10751,
-      "sha256": "ff3aa145eaca0a184718cea13a33ee6008191ad56b1e48b867138afe8d47f6b1"
+      "bytes": 10774,
+      "sha256": "f3d922f23160ea282722edc6f91b84b34538559e77655a666f49f729c5aae9d5"
     },
     {
       "path": "docs/唐岛湾声学边缘交通演示_项目交付手册_v1.2.docx",
@@ -111,6 +121,11 @@
       "path": "evidence/acceptance.json",
       "bytes": 14786,
       "sha256": "2d02236490324b6a63cdd6983a0f9eb148faa913e9190e2cb3a65095340adf94"
+    },
+    {
+      "path": "evidence/adjacent_roads_20261008/map_verification.json",
+      "bytes": 7413,
+      "sha256": "04a07edac2d0a29b9acfb5ee049831710e88dbadd7e1a21a124513f3614c1f12"
     },
     {
       "path": "evidence/browser_acceptance.json",
@@ -328,6 +343,46 @@
       "sha256": "44e9374a4f0f8778573e5b8bf222d2b72c14b8507d4425e2b7f4d8a349057f98"
     },
     {
+      "path": "evidence/v1_5_20261008/adjacent_roads_live.png",
+      "bytes": 145603,
+      "sha256": "1ce261a5029e70661b84a5f4eb65bbad5b5fd7c9264cfc12f49f01325ea75eac"
+    },
+    {
+      "path": "evidence/v1_5_20261008/browser_smoke.json",
+      "bytes": 817,
+      "sha256": "d84e6a8455bbe05cb342886889586178d6974c0dbcd000848e4da13831b318d2"
+    },
+    {
+      "path": "evidence/v1_5_20261008/frontend_checks.json",
+      "bytes": 871,
+      "sha256": "399f9634d9320e1a93163ae87d8979da91df7e03ebfef7bb7e7d7c0140e5fe6b"
+    },
+    {
+      "path": "evidence/v1_5_20261008/frontend_follow_checks.json",
+      "bytes": 1976,
+      "sha256": "aa920b222b7e18900ac5ccff20ae65bfee84368d36c428184760ee5c58290ad1"
+    },
+    {
+      "path": "evidence/v1_5_20261008/independent_review.json",
+      "bytes": 5067,
+      "sha256": "5e0982736ca71807dca78e3af15574eaf8c8e7799e61db7c6f60d711f21faa0d"
+    },
+    {
+      "path": "evidence/v1_5_20261008/launcher_validation.json",
+      "bytes": 4782,
+      "sha256": "a7724860da4625c7cdfeab077ccbaf078decc13380523ad4955b630e94764740"
+    },
+    {
+      "path": "evidence/v1_5_20261008/meo_export_parity.json",
+      "bytes": 1031,
+      "sha256": "41272aa199918392f80e5230860e7738cd00cd5101ab59455ff20d335a1e4521"
+    },
+    {
+      "path": "evidence/v1_5_20261008/meo_sumo_integration.json",
+      "bytes": 43839,
+      "sha256": "44fbd859c6f373805bfa13d543066e841c27928e836acd71edf267fcfec8edc0"
+    },
+    {
       "path": "evidence/vendor_integrity.json",
       "bytes": 694,
       "sha256": "a1a3ab5ee693bf7776843d6900a78b34ab13e24df067eed64a19a17b577f6bd7"
@@ -353,6 +408,11 @@
       "sha256": "82fa35f05dce618d927bbdfbbe4bd2d6a5276fd351c6c8d7b716dbb7c0460500"
     },
     {
+      "path": "integration/meo_policy.py",
+      "bytes": 13403,
+      "sha256": "2dfa40d070626513b2e11f50d31e4bf2e294f292c7b5eef0e42e6d71b5cc17e1"
+    },
+    {
       "path": "integration/providers.py",
       "bytes": 6973,
       "sha256": "96d5d56b96d0301dad567d776306431723254e013c64bc42e87ea98801df9502"
@@ -369,23 +429,38 @@
     },
     {
       "path": "MAP_NOTES.md",
-      "bytes": 8775,
-      "sha256": "5afb742ea5368e8106283a7908e3cf491cf3ac3a09e14a0b0a34a053ad6858e9"
+      "bytes": 10610,
+      "sha256": "16c5dc6c4e89ea9f80ea1782d5924285911c0bfdb06dc17e444d07d69084c82c"
+    },
+    {
+      "path": "models/meo/accuracy.npz",
+      "bytes": 1695397,
+      "sha256": "b55e16099cdddbae8ba1ce9ee6db08abe79ca92c46f0db4733cf7b7be8969aea"
+    },
+    {
+      "path": "models/meo/completion.npz",
+      "bytes": 1712024,
+      "sha256": "02c437c5f619f28aacae3f26f488cbd21d99b08944076b4893b498cb3a4ea098"
+    },
+    {
+      "path": "models/meo/manifest.json",
+      "bytes": 2486,
+      "sha256": "673f3c1837ba29781af21444cf8cc679f74b092a9e30a8f8dfd892dc1a8bbd6f"
     },
     {
       "path": "README.md",
-      "bytes": 11811,
-      "sha256": "4efb3e976c1c0b0bc87fb889280ebe9210999153732056cc8298575ffbc2b459"
+      "bytes": 12741,
+      "sha256": "b5c007987e681d6702246cf4e1458863cc39f013112160442b14f17410762d09"
     },
     {
       "path": "runtime-manifest.json",
-      "bytes": 1385,
-      "sha256": "577114ed2070dc2dab4c837b5578a9a2fcf3af3c1df3d15ed65f5670e3b2da47"
+      "bytes": 1953,
+      "sha256": "311c3500c992b992192c53c8ce7e5f35ede1f04bc0496099e5f4923b4bca0ec4"
     },
     {
       "path": "scenario/tangdao.net.xml",
-      "bytes": 809046,
-      "sha256": "8e75b46ad3c62226f04a60ae1290b45719fdf81079f3e9ebeb333c340725ca76"
+      "bytes": 820303,
+      "sha256": "f51f9327c5e9c1996470f050d297de62cf715faa10f6c6ec0a8f25c271435557"
     },
     {
       "path": "scenario/tangdao.sumocfg",
@@ -394,8 +469,8 @@
     },
     {
       "path": "scenario/traffic.rou.xml",
-      "bytes": 2448,
-      "sha256": "2d2027b1a4c8f032abd079543db2f26b8a8e90722edee67b1c30605e490860c9"
+      "bytes": 2178,
+      "sha256": "3c2c474c595cbb42d38759672d0b158e172dc6aecc5a884d0051720e1e6b63bb"
     },
     {
       "path": "scripts/assemble_acceptance.py",
@@ -409,8 +484,8 @@
     },
     {
       "path": "scripts/build_map.py",
-      "bytes": 28641,
-      "sha256": "71b538de5172320a688322469e41e6f2932b04e3b07e573d3a80ec1dd66b8e3e"
+      "bytes": 31811,
+      "sha256": "9173240724f0d42e2f87b25b5a33d210de7b8388235046b3421e01e7458bcf10"
     },
     {
       "path": "scripts/check_http.py",
@@ -418,9 +493,14 @@
       "sha256": "32ee96f411c69fc0e43e6b182b43a802c5e71b80a06081bfa598b79600fe3d99"
     },
     {
+      "path": "scripts/export_meo_policy.py",
+      "bytes": 7875,
+      "sha256": "ca37ed4c58c0cf5dbb9e186a458b8a701f31962710e74cb3925e7bee1ff9dde8"
+    },
+    {
       "path": "scripts/package_demo.py",
-      "bytes": 3429,
-      "sha256": "345b87620ab33bf8ce53cff6022fac4260c64c554e0e7e5578be3563ace73132"
+      "bytes": 3478,
+      "sha256": "50282abb3a5e87f47dc16e63a6fdcc0c6f00b7021b06795431d687296d303ca4"
     },
     {
       "path": "scripts/verify_package.py",
@@ -429,18 +509,18 @@
     },
     {
       "path": "server.py",
-      "bytes": 8527,
-      "sha256": "2c22db15e295480b1c143282feeef239d3bc413a7c5270b0def0773b7346578d"
+      "bytes": 8563,
+      "sha256": "6307e2b0e8720c90f9ca3e41262e8517bf7b4ad3ba8aa702c6544d5a0b210659"
     },
     {
       "path": "Setup_Runtime.ps1",
-      "bytes": 8930,
-      "sha256": "9d8d3242a787cba2a1a60b8be0c36df3b539e8729632ce1d8f8ec38b4681d93c"
+      "bytes": 10042,
+      "sha256": "b137b35569f96abc5b4c301a01abdf50664635b14e5f3adf424da1a3ddc860ea"
     },
     {
       "path": "simulation.py",
-      "bytes": 36837,
-      "sha256": "233b6f64f32f8bb2ca04b46ef2876c52edb3f89671107414f2a2415b157e16c1"
+      "bytes": 40943,
+      "sha256": "4c1afe5b55cf599c33f49da344d29fd28047fd32b69c32d5f7796038cd58efe2"
     },
     {
       "path": "Start_Demo.cmd",
@@ -464,8 +544,23 @@
     },
     {
       "path": "tests/frontend_performance.mjs",
-      "bytes": 7451,
-      "sha256": "934be912d37dd755611e93fe211b63a5b33873a66f4d92b2ddf2898d3f5bc6ca"
+      "bytes": 7411,
+      "sha256": "0a6cd2ff716508cfcf2e7f5ca978a75996a38b2805d89416b67647ed61b46f40"
+    },
+    {
+      "path": "tests/test_adjacent_roads.py",
+      "bytes": 5686,
+      "sha256": "6231a6d82cc1105274df8fc4555eb44b52f21f2d7573846d0705d3912c0a2c31"
+    },
+    {
+      "path": "tests/test_meo_lifecycle.py",
+      "bytes": 7977,
+      "sha256": "0f8660baf26d56854be23fa476abe65c83c5e6e6a3b468fd85f250616c78f8ee"
+    },
+    {
+      "path": "tests/test_meo_policy.py",
+      "bytes": 5451,
+      "sha256": "08eaca17238fc670fe7e3c87e04091206cac960352e0388ee7fd09d01ef20c1e"
     },
     {
       "path": "tests/test_model_adapters.py",
@@ -489,8 +584,8 @@
     },
     {
       "path": "tests/vehicle_follow.mjs",
-      "bytes": 18293,
-      "sha256": "8dd75f4edb6332d2d17b86283faa6ecb057cf5ebe4f568c9b19fcea53993832b"
+      "bytes": 19323,
+      "sha256": "09b0ec7d5f826ab26420d96b72ef110da108635a0c70eeb1786765e345446b84"
     },
     {
       "path": "tests/verify_backend.py",
@@ -504,8 +599,13 @@
     },
     {
       "path": "tests/verify_launcher.ps1",
-      "bytes": 8544,
-      "sha256": "89e867d4b43ab10261eb28fa2b40ed48ba5ddfc0c3216e07ba211b52895661e0"
+      "bytes": 8928,
+      "sha256": "44c721120d330536ce4ca5c68dc98687fdd9aef74db101f55b43b2ca96cfb341"
+    },
+    {
+      "path": "tests/verify_meo_journey.py",
+      "bytes": 5407,
+      "sha256": "c8a4fbc20fe32b8a71513f5452fd2e47dda12bbbcd7791e3c1fc1d171a965cf5"
     },
     {
       "path": "tests/verify_vehicle_journey.py",
@@ -514,8 +614,8 @@
     },
     {
       "path": "THIRD_PARTY_NOTICES.txt",
-      "bytes": 1529,
-      "sha256": "4da794f8fb43a1243678e9372f3e289b826df1163d30bb448a3b770609d70a36"
+      "bytes": 1930,
+      "sha256": "584fbc71a13be9f677fa5abf0605f24ddb3db5472af8cde30a637d2d85d21f87"
     },
     {
       "path": "verification/backend_120s_export.json",
@@ -539,8 +639,8 @@
     },
     {
       "path": "web/app.js",
-      "bytes": 67619,
-      "sha256": "09da06da1f118c0d90e0fea6cfbf339d33328f41d797846bf3ff5bce9a28ef0c"
+      "bytes": 68767,
+      "sha256": "a3b4e2b320a9a6fed33149b24d118dcd5412ab931030061d2cab0f6d64a864fd"
     },
     {
       "path": "web/audio/CC0-1.0.txt",
@@ -559,8 +659,8 @@
     },
     {
       "path": "web/index.html",
-      "bytes": 12020,
-      "sha256": "a7076474b9001c3bcf9812fe94e267d7ad46574bd1fcbcdb2b059450457e8bb9"
+      "bytes": 12175,
+      "sha256": "040fdac057840b35a680ebb2781d491b5e47ff3ecbe14b1633f0b9010e0bcfe5"
     },
     {
       "path": "web/style.css",
@@ -594,8 +694,8 @@
     },
     {
       "path": "使用前请先看.txt",
-      "bytes": 1967,
-      "sha256": "7fa61c337e121365883edf5817d3f620bb2e84f4b75fcfe762ae528448907db8"
+      "bytes": 2254,
+      "sha256": "f043c1a1bcb916d82da1f2686b8c06bdfbb8da4926e7bc499b25bfec7bdcab1d"
     }
   ]
 }

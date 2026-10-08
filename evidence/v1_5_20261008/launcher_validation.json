@@ -1,0 +1,112 @@
+﻿{
+    "schemaVersion":  1,
+    "created":  "2026-10-08T18:59:21.6742766+08:00",
+    "passed":  true,
+    "checks":  [
+                   {
+                       "check":  "PowerShell syntax: Start_Demo.ps1",
+                       "passed":  true,
+                       "details":  null
+                   },
+                   {
+                       "check":  "PowerShell syntax: Setup_Runtime.ps1",
+                       "passed":  true,
+                       "details":  null
+                   },
+                   {
+                       "check":  "PowerShell syntax: Stop_Demo.ps1",
+                       "passed":  true,
+                       "details":  null
+                   },
+                   {
+                       "check":  "python official archive SHA256",
+                       "passed":  true,
+                       "details":  "4acbed6dd1c744b0376e3b1cf57ce906f9dc9e95e68824584c8099a63025a3c3"
+                   },
+                   {
+                       "check":  "sumo official archive SHA256",
+                       "passed":  true,
+                       "details":  "bd30ae9a1c380bf17fb667c969fe4b5b8e6a7d1208d03751f1398e7d38a207d7"
+                   },
+                   {
+                       "check":  "numpy official archive SHA256",
+                       "passed":  true,
+                       "details":  "08beddf13648eb95f8d867350f6a018a4be2e5ad54c8d8caed89ebca558b2818"
+                   },
+                   {
+                       "check":  "PrepareOnly starts no server",
+                       "passed":  true,
+                       "details":  null
+                   },
+                   {
+                       "check":  "Offline relocation needs no downloaded archive cache",
+                       "passed":  true,
+                       "details":  null
+                   },
+                   {
+                       "check":  "PortableOnly ignores system Python and SUMO",
+                       "passed":  true,
+                       "details":  null
+                   },
+                   {
+                       "check":  "Embedded Python paths are relative",
+                       "passed":  true,
+                       "details":  null
+                   },
+                   {
+                       "check":  "Python and SUMO licenses retained",
+                       "passed":  true,
+                       "details":  null
+                   },
+                   {
+                       "check":  "Relocated Unicode and spaced path starts real SUMO",
+                       "passed":  true,
+                       "details":  {
+                                       "sumo":  "SUMO 1.25.0",
+                                       "port":  8766
+                                   }
+                   },
+                   {
+                       "check":  "Initial state is paused",
+                       "passed":  true,
+                       "details":  null
+                   },
+                   {
+                       "check":  "Default learned MEO policy loaded",
+                       "passed":  true,
+                       "details":  null
+                   },
+                   {
+                       "check":  "Repeated launch reuses this project service",
+                       "passed":  true,
+                       "details":  null
+                   },
+                   {
+                       "check":  "Portable SUMO advances traffic after resume",
+                       "passed":  true,
+                       "details":  {
+                                       "vehicles":  8,
+                                       "simTime":  10.0
+                                   }
+                   },
+                   {
+                       "check":  "Pause stops the simulation clock",
+                       "passed":  true,
+                       "details":  null
+                   },
+                   {
+                       "check":  "Stop_Demo gracefully stops only relocated service",
+                       "passed":  true,
+                       "details":  null
+                   },
+                   {
+                       "check":  "Original port 8765 service was not replaced or stopped",
+                       "passed":  true,
+                       "details":  null
+                   }
+               ],
+    "scope":  "Windows PowerShell launcher, official runtime SHA256, offline relocation to a Unicode/spaced temporary path, real SUMO/TraCI start/pause/resume/stop. Not a fresh Windows virtual machine or browser GPU test.",
+    "python":  "3.12.10",
+    "sumo":  "1.25.0",
+    "downloadExercise":  false
+}

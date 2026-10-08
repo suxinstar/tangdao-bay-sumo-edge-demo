@@ -1,3 +1,8 @@
+v1.5.0：MEO训练调度策略 + 漓江西路/珠江路相邻双道路。
+双击 Start_Demo.cmd 启动，浏览器点击“开始跟车演示”；默认完成率偏好。
+旧服务更新前先双击 Stop_Demo.cmd，再启动并 Ctrl+F5。
+详见 README.md 和 docs/MEO_SCHEDULER.md。
+
 唐岛湾北岸声学边缘交通演示
 本地版本 1.3.0 HUD与单车跟随版  2026-10-08
 

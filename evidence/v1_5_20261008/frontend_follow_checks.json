@@ -1,0 +1,39 @@
+{
+  "passed": true,
+  "checks": 26,
+  "details": [
+    "meo_drop_has_no_compute_return_signal_or_transfer",
+    "selected_vehicle_tasks_ignore_global_trace",
+    "selected_vehicle_events_include_legacy_task_id_without_other_cars",
+    "archive_retains_selected_tasks_outside_global_window",
+    "automatic_task_holds_completed_result_then_advances",
+    "manual_pin_survives_later_tasks_and_can_return_to_auto",
+    "departed_vehicle_keeps_identity_archive_and_camera",
+    "follow_camera_translates_position_and_target_preserving_orbit_offset",
+    "paused_follow_stays_still_without_continuous_frame_work",
+    "free_camera_retains_vehicle_dossier_without_chasing",
+    "vehicle_trail_is_capped_at_120_in_fixed_buffer",
+    "selected_vehicle_effects_prioritized_inside_light_limit_12",
+    "reset_clears_selected_vehicle_history_and_visuals",
+    "late_response_for_previous_selection_cannot_replace_current_dossier",
+    "response_for_previous_run_is_ignored_after_run_change",
+    "server_response_with_wrong_run_id_is_ignored",
+    "late_response_after_reset_cannot_restore_old_selection",
+    "hidden_page_and_unchanged_sim_time_skip_vehicle_fetch",
+    "vehicle_geometry_is_two_batches_with_one_transform_each",
+    "offscreen_culling_retains_selected_vehicle_and_pick_mapping",
+    "4k_render_buffer_has_pixel_budget_without_changing_css_size",
+    "combined_poll_uses_one_request_for_state_and_vehicle_trace",
+    "combined_poll_discards_detail_after_vehicle_switch",
+    "combined_poll_aborts_when_hidden",
+    "control_epoch_rejects_pre_command_running_response",
+    "hiding_revokes_audio_until_fresh_state_succeeds"
+  ],
+  "scope": "Shipped frontend functions and real Three.js vectors/geometries in Node VM. Mocked DOM, renderer, frame timers, and HTTP. Not a GPU, screenshot, browser, or SUMO integration benchmark.",
+  "limits": {
+    "lightEffectObjects": 12,
+    "followTrailPoints": 120
+  },
+  "source": "web/app.js",
+  "test": "tests/vehicle_follow.mjs"
+}

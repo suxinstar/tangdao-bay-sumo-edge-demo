@@ -24,15 +24,24 @@ OSM = ROOT / "data/tangdao.osm.xml"
 SOURCE = ROOT / "data/source_manifest.json"
 NET = ROOT / "scenario/tangdao.net.xml"
 # Keep the first four station identifiers stable for existing saved demonstrations.
-# Additional stations make the north-shore demo a two-corridor network instead
-# of a single short coastal strip. All pairs must exist in the imported OSM net.
+# Pearl River Road is the next parallel corridor north of the coastal road.
+# New station signals are explicit synthetic control, never asserted as OSM tags.
 INTERSECTION_ROADS = [
     ("漓江西路", "太行山路"), ("漓江西路", "井冈山路"),
     ("漓江西路", "武夷山路"), ("漓江西路", "阿里山路"),
-    ("漓江西路", "庐山路"), ("漓江西路", "九连山路"),
-    ("长江中路", "井冈山路"), ("长江中路", "武夷山路"),
-    ("长江中路", "阿里山路"),
+    ("珠江路", "庐山路"), ("珠江路", "井冈山路"),
+    ("珠江路", "武夷山路"), ("珠江路", "阿里山路"),
+    ("珠江路", "王屋山路"),
 ]
+# Paired carriageway nodes belonging to the SAME real OSM intersection.
+# Explicit joins retain surrounding road geometry; they do not join separate roads.
+SYNTHETIC_SIGNAL_CLUSTERS = {
+    "庐山路": ["3265502515", "4249906632"],
+    "井冈山路": ["1548278295", "4249906635", "4249906636", "4249906637"],
+    "武夷山路": ["1548278338", "4249906642"],
+    "阿里山路": ["1548278337", "4249906644", "6902632405", "6902632858"],
+    "王屋山路": ["13958144640", "13958144648"],
+}
 COMMANDS = []
 
 def dump(path, obj):
@@ -146,16 +155,17 @@ def number(value):
 def write_map_preview(scene):
     """Dependency-free QA overview; this is a data plot, not a GUI screenshot."""
     from html import escape
-    bounds = scene["bounds"]
+    bounds = scene["meta"]["focusBounds"]
     scale = min(1420 / (bounds["maxX"]-bounds["minX"]), 880 / (bounds["maxY"]-bounds["minY"]))
     def point(p):
-        return (40+(p[0]-bounds["minX"])*scale, 60+(bounds["maxY"]-p[1])*scale)
+        return ((1500-(bounds["maxX"]-bounds["minX"])*scale)/2+(p[0]-bounds["minX"])*scale, 60+(bounds["maxY"]-p[1])*scale)
     def points(poly):
         return " ".join("%.2f,%.2f" % point(p) for p in poly)
     parts = ['<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1160" viewBox="0 0 1500 1160">',
              '<rect width="1500" height="1160" fill="#111e2b"/>',
              '<g font-family="Microsoft YaHei, sans-serif" fill="#e2eef4">',
-             '<text x="40" y="32" font-size="23">唐岛湾北岸 · 双主干道 / 9 路口 / 9 RSU</text>']
+             '<text x="40" y="32" font-size="23">唐岛湾北岸 · 漓江西路 / 珠江路 · 相邻双道路 / 9 RSU</text>',
+             '<defs><clipPath id="map"><rect x="40" y="60" width="1420" height="880"/></clipPath></defs><g clip-path="url(#map)">']
     for area in scene["areas"]:
         rings = [area["polygon"]] + area.get("holes", [])
         path = " ".join("M "+" L ".join("%.2f %.2f" % point(p) for p in ring)+" Z" for ring in rings)
@@ -163,20 +173,22 @@ def write_map_preview(scene):
         parts.append('<path d="%s" fill="%s" fill-rule="evenodd"/>' % (path, color))
     for b in scene["buildings"]:
         parts.append('<polygon points="%s" fill="#485461"/>' % points(b["polygon"]))
-    for r in scene["roads"]:
-        parts.append('<polyline points="%s" fill="none" stroke="#8c9baa" stroke-width="%.2f"/>' % (points(r["shape"]),max(.6,r["width"]*scale)))
+    for r in sorted(scene["roads"], key=lambda r:r["name"] in ["漓江西路", "珠江路"]):
+        color = "#f3ed29" if r["name"] == "漓江西路" else ("#35ddf5" if r["name"] == "珠江路" else "#718593")
+        parts.append('<polyline points="%s" fill="none" stroke="%s" stroke-width="%.2f"/>' % (points(r["shape"]),color,max(.6,r["width"]*scale)))
     for r in scene["rsus"]:
         x,y = point([r["x"],r["y"]])
         parts.append('<circle cx="%.2f" cy="%.2f" r="%.2f" fill="#31d5ba" fill-opacity=".1" stroke="#31d5ba"/>' % (x,y,r["sensingRadiusM"]*scale))
         parts.append('<circle cx="%.2f" cy="%.2f" r="5" fill="#f3ed29"/>' % (x,y))
-        parts.append('<text x="%.2f" y="%.2f" font-size="16" fill="#f3ed29">%s</text>' % (x+8,y-7,escape(r["id"])))
+        parts.append('<text x="%.2f" y="%.2f" font-size="16" fill="#f3ed29" stroke="#111e2b" stroke-width="4" paint-order="stroke">%s</text>' % (x+8,y-7,escape(r["id"])))
     f = scene["meta"]["focusBounds"]
     fx,fy = point([f["minX"],f["maxY"]])
     parts.append('<rect x="%.2f" y="%.2f" width="%.2f" height="%.2f" fill="none" stroke="#ed839d" stroke-dasharray="9 7"/>' % (fx,fy,(f["maxX"]-f["minX"])*scale,(f["maxY"]-f["minY"])*scale))
+    parts.append("</g>")
     for i, junction in enumerate(scene["intersections"]):
         parts.append('<text x="%d" y="%d" font-size="15">RSU_%d  %s</text>' % (40+(i%3)*480,980+(i//3)*32,i+1,escape(junction["name"])))
-    parts.append('<text x="40" y="1100" font-size="15">粉色虚线：默认演示范围 %.0f × %.0f m；圈：合成 RSU 105 m 覆盖区。道路/建筑轮廓来源 OSM。</text>' % (f["maxX"]-f["minX"],f["maxY"]-f["minY"]))
-    parts.append('<text x="40" y="1132" font-size="15">© OpenStreetMap contributors / ODbL 1.0 · 数据核对图（不是浏览器运行截图）</text></g></svg>')
+    parts.append('<text x="40" y="1100" font-size="15">黄色：漓江西路；蓝色：珠江路。默认范围 %.0f × %.0f m；圈：合成 RSU 105 m 覆盖区。</text>' % (f["maxX"]-f["minX"],f["maxY"]-f["minY"]))
+    parts.append('<text x="40" y="1132" font-size="15">© OpenStreetMap contributors / ODbL 1.0 · 珠江路5个信号为合成；数据核对图（非运行截图）</text></g></svg>')
     (ROOT/"data/map_preview.svg").write_text("\n".join(parts)+"\n",encoding="utf-8")
 
 def main():
@@ -203,7 +215,19 @@ def main():
     sumo = shutil.which("sumo")
     if not netconvert or not sumo:
         raise RuntimeError("SUMO and netconvert must be on PATH")
-    cmd = [netconvert, "--osm-files", "data/tangdao.osm.xml", "--output-file", "scenario/tangdao.net.xml",
+    signal_patch = ET.Element("nodes")
+    for cross_road, members in SYNTHETIC_SIGNAL_CLUSTERS.items():
+        if not all(node_id in nodes for node_id in members):
+            raise RuntimeError("Synthetic signal cluster missing OSM nodes: " + cross_road)
+        # Fail closed if a refreshed snapshot resolves to a geographically different site.
+        projected = [utm(*nodes[node_id]) for node_id in members]
+        if max(math.dist(a, b) for a in projected for b in projected) > 70:
+            raise RuntimeError("Synthetic signal cluster is no longer one intersection: " + cross_road)
+        for node_id in members:
+            ET.SubElement(signal_patch, "node", id=node_id, type="traffic_light")
+        ET.SubElement(signal_patch, "join", nodes=" ".join(members))
+    ET.ElementTree(signal_patch).write(str(ROOT/"data/synthetic-signals.nod.xml"), encoding="utf-8", xml_declaration=True)
+    cmd = [netconvert, "--node-files", "data/synthetic-signals.nod.xml", "--osm-files", "data/tangdao.osm.xml", "--output-file", "scenario/tangdao.net.xml",
            "--geometry.remove", "--junctions.join", "--tls.guess-signals", "--tls.discard-simple",
            "--tls.join", "--tls.default-type", "static", "--tls.cycle.time", "64",
            "--tls.yellow.time", "3", "--tls.allred.time", "1",
@@ -340,12 +364,19 @@ def main():
         ry = iy-(iy-ay)/length*28+(ix-ax)/length*13
         junction_name = main_road + " × " + cross_road
         intersections.append({"id":tls_id, "junctionId":node.getID(), "x":ix, "y":iy, "lonLat":lonlat([ix,iy]), "name":junction_name,
-                              "signalSource":"OSM signal tags interpreted/merged by netconvert; synthetic SUMO timing",
+                              "signalSource":("synthetic SUMO traffic light added at a real OSM intersection; no surveyed signal claim" if main_road == "珠江路" else "OSM signal tags interpreted/merged by netconvert; synthetic SUMO timing"),
+                              "signalSynthetic": main_road == "珠江路", "corridor":main_road,
                               "incomingLaneIds":incoming, "shape":[list(p) for p in node.getShape()]})
         rsus.append({"id":"RSU_"+str(index+1),"x":round(rx,2),"y":round(ry,2),"intersectionId":tls_id,"junctionId":node.getID(),
-                     "name":("长江·" if main_road == "长江中路" else "")+cross_road+"感知站","sensingRadiusM":105,
+                     "name":("珠江·" if main_road == "珠江路" else "漓江·")+cross_road+"感知站", "corridor":main_road,"sensingRadiusM":105,
                      "serviceTimeS":[2.6,1.6,2.3,1.35,2.1,1.9,2.4,1.5,2.0][index], "incomingLaneIds":incoming,
                      "deploymentSource":"synthetic_demo","heightM":8})
+    corridor_distances = []
+    for cross_road in ["井冈山路", "武夷山路", "阿里山路"]:
+        a = next(n for n in intersections if n["name"] == "漓江西路 × " + cross_road)
+        b = next(n for n in intersections if n["name"] == "珠江路 × " + cross_road)
+        corridor_distances.append({"crossRoad":cross_road, "from":a["name"], "to":b["name"],
+                                   "junctionCenterDistanceM":round(math.hypot(a["x"]-b["x"], a["y"]-b["y"]),2)})
     focus = {"minX":min(n.getCoord()[0] for n in selected)-230,
              "maxX":max(n.getCoord()[0] for n in selected)+250,
              "minY":min(n.getCoord()[1] for n in selected)-260,
@@ -363,16 +394,17 @@ def main():
                        "counts":{"nodes":len(nodes),"ways":len(ways),"relations":len(osm_root.findall("relation"))},
                        "roadNames":road_names,"downloadNote":"OSM map API includes full ways crossing bbox; source extents therefore exceed requested bbox."}
     dump(SOURCE,source_manifest)
-    scene = {"meta":{"name":"唐岛湾北岸 · 漓江西路 / 长江中路","bbox":BBOX,"source":"OpenStreetMap","sourceUrl":"https://www.openstreetmap.org/copyright",
+    scene = {"meta":{"name":"唐岛湾北岸 · 漓江西路 / 珠江路","bbox":BBOX,"source":"OpenStreetMap","sourceUrl":"https://www.openstreetmap.org/copyright",
                      "downloadedAt":downloaded,"license":"ODbL 1.0","attribution":"© OpenStreetMap contributors",
                      "osmSha256":sha(OSM),"sumoVersion":version,"coordinateSystem":"SUMO local metres; WGS84 UTM zone 51N + netOffset",
                      "projection":location,"actualRoadGeoBounds":road_geo_bounds,"focusBounds":focus,"focusCenter":[(focus["minX"]+focus["maxX"])/2,(focus["minY"]+focus["maxY"])/2],
-                     "demoArea":{"corridors":["漓江西路","长江中路"],"selectedIntersections":len(selected),
-                                 "coverage":"North shore coastal corridor, east to Jiulianshan Road, and the Changjiang Middle Road corridor",
-                                 "selectionStrategy":"Named signalized intersections in the imported real OSM network"},
+                     "demoArea":{"corridors":["漓江西路","珠江路"],"selectedIntersections":len(selected),
+                                 "syntheticSignalCount":len(SYNTHETIC_SIGNAL_CLUSTERS), "adjacentCorridorDistances":corridor_distances,
+                                 "coverage":"Two adjacent real parallel roads: Lijiang West Road and Zhujiang Road, connected by Lushan/Jinggangshan/Wuyishan/Alishan roads",
+                                 "selectionStrategy":"Four existing OSM-tagged coastal signals and five explicitly synthetic SUMO signals at real adjacent Zhujiang Road intersections"},
                      "notes":["道路和建筑轮廓来自真实OSM；缺失高度按15m假设，层数按3.2m换算。",
                               "车辆需求、RSU部署、声学任务、计算通信时间和信号配时均为演示仿真。",
-                              "OSM信号位置经SUMO合并解释；64秒静态配时为合成，不是市政实测配时。",
+                              "RSU1–4为OSM信号标签解释；珠江路RSU5–9为真实路口上新增的合成信号，所有64秒配时均非实测。",
                               "唐岛湾水面沿真实OSM海岸线生成，视图边界闭合不是新造海岸。",
                               "道路全部使用SUMO实际坐标；建筑与区域按请求bbox裁切，不表示城市完整数据。"]},
              "bounds":bounds,"roads":roads,"buildings":buildings,"areas":areas,"coastlines":coastlines,
@@ -395,15 +427,14 @@ def main():
         ET.SubElement(routes,"flow",id="flow_"+rid,type="demo_car",route=rid,begin=str(begin),end="580",
                       period=str(period),departLane="best",departSpeed="max")
         traffic.append({"id":rid,"edges":ids,"periodS":period,"beginS":begin,"endS":580,"source":"synthetic_seeded_demo"})
-    add_route("coast_east","320042747#1","364477967#1",9)
-    add_route("coast_west","834910233#3","834910233#34",11,1)
-    add_route("north_east","452302426#1","452302425#3",14,2)
-    add_route("north_west","543852189#4","138421943#5",16,3)
-    side_one = max([e for e in selected[0].getIncoming() if e.getName()=="太行山路"],key=lambda e:e.getLength())
-    add_route("side_1",side_one.getID(),"320042747#22",23,4)
-    add_route("side_2","141451700#2","364477967#1",21,5)
-    add_route("side_3","425696586#1","452302425#3",22,6)
-    add_route("side_4","-320048295","834910233#34",24,7)
+    add_route("coast_east","320042747#1","320042747#22",11)
+    add_route("coast_west","834910233#11","834910233#34",13,1)
+    add_route("north_east","425696589#1","425696589#9",13,2)
+    add_route("north_west","425696676#3","425696676#11",15,3)
+    add_route("side_1","320042747#1","425696589#9",23,4)
+    add_route("side_2","425696676#3","834910233#34",23,5)
+    add_route("side_3","834910233#11","425696589#9",24,6)
+    add_route("side_4","425696589#1","320042747#22",25,7)
     route_coverage = {}
     for index, node in enumerate(selected):
         approach_edges = {e.getID() for e in node.getIncoming() if e.getFunction() != "internal"}
@@ -430,7 +461,7 @@ def main():
     ET.ElementTree(cfg).write(str(ROOT/"scenario/tangdao.sumocfg"),encoding="utf-8",xml_declaration=True)
     dump(ROOT/"data/traffic_manifest.json",{"seed":42,"stepLengthS":.2,"durationS":600,"source":"synthetic", "routes":traffic,
                                           "intersectionRouteCoverage":route_coverage,
-                                          "demandDesign":"Two main corridors and north/south connector flows; deliberately sparse for follow-mode performance."})
+                                          "demandDesign":"Two adjacent corridors and four connected cross-road flows; deliberately sparse for follow-mode performance."})
     stats={"roadsIncludingInternal":len(roads),"roadEdges":len([r for r in roads if not r["internal"]]),
            "buildings":len(buildings),"buildingHeightSources":{s:sum(b["heightSource"]==s for b in buildings) for s in ["osm_height","osm_levels","assumed"]},
            "areas":len(areas),"areaTypes":{t:sum(a["type"]==t for a in areas) for t in ["water","park"]},
@@ -438,6 +469,7 @@ def main():
            "projectionCheckNodeCount":len(align_errors),"projectionMaxErrorM":round(max(align_errors),6),
            "incompleteAreaRelationsOmitted":incomplete_relations,"selectedIntersections":intersections,
            "syntheticFlowCount":len(traffic),"intersectionRouteCoverage":route_coverage,
+           "syntheticSignals":len(SYNTHETIC_SIGNAL_CLUSTERS),"adjacentCorridorDistances":corridor_distances,
            "focusWidthM":round(focus["maxX"]-focus["minX"],2),"focusHeightM":round(focus["maxY"]-focus["minY"],2)}
     if args.verify:
         output=run([sumo,"-c","scenario/tangdao.sumocfg","--summary-output","data/sumo_summary.xml",
@@ -461,6 +493,9 @@ def main():
                                "collisionWarnings":len(re.findall("collision",output,re.I)),
                                "teleportWarnings":len(re.findall("Teleport",output)),
                                "actualIntersectionApproaches":actual_approaches}
+    stats["inputSha256"] = {name:sha(ROOT/name) for name in (
+        "scripts/build_map.py", "data/tangdao.osm.xml", "data/synthetic-signals.nod.xml",
+        "data/scene.json", "scenario/tangdao.net.xml", "scenario/traffic.rou.xml", "scenario/tangdao.sumocfg")}
     dump(ROOT/"data/build_stats.json",stats)
     dump(ROOT/"data/build_commands.json",COMMANDS)
     print(json.dumps(stats,ensure_ascii=False,indent=2))

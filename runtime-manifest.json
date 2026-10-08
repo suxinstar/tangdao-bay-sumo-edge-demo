@@ -20,15 +20,36 @@
     "sha256": "bd30ae9a1c380bf17fb667c969fe4b5b8e6a7d1208d03751f1398e7d38a207d7",
     "directory": "sumo-1.25.0",
     "archiveRoot": "sumo-1.25.0/",
-    "includedDirectories": ["bin", "tools", "data", "share"],
-    "additionalFiles": ["docs/userdoc/Libraries_Licenses.html"],
+    "includedDirectories": [
+      "bin",
+      "tools",
+      "data",
+      "share"
+    ],
+    "additionalFiles": [
+      "docs/userdoc/Libraries_Licenses.html"
+    ],
     "includeRootFiles": true,
-    "licenses": ["LICENSE", "NOTICE.md", "docs/userdoc/Libraries_Licenses.html"]
+    "licenses": [
+      "LICENSE",
+      "NOTICE.md",
+      "docs/userdoc/Libraries_Licenses.html"
+    ]
   },
   "hashProvenance": "SHA256 computed from the official HTTPS archives downloaded and tested for this release. This is a pinned integrity check, not an upstream signature verification.",
   "upstreamReferences": [
     "https://www.python.org/ftp/python/3.12.10/",
     "https://sumo.dlr.de/releases/1.25.0/",
-    "https://eclipse.dev/sumo/docs/Downloads.html"
-  ]
+    "https://eclipse.dev/sumo/docs/Downloads.html",
+    "https://pypi.org/project/numpy/1.26.4/"
+  ],
+  "numpy": {
+    "version": "1.26.4",
+    "url": "https://files.pythonhosted.org/packages/16/2e/86f24451c2d530c88daf997cb8d6ac622c1d40d19f5a031ed68a4b73a374/numpy-1.26.4-cp312-cp312-win_amd64.whl",
+    "archive": "numpy-1.26.4-cp312-cp312-win_amd64.whl",
+    "bytes": 15517754,
+    "sha256": "08beddf13648eb95f8d867350f6a018a4be2e5ad54c8d8caed89ebca558b2818",
+    "directory": "numpy-1.26.4-cp312",
+    "license": "numpy-1.26.4.dist-info/LICENSE.txt"
+  }
 }

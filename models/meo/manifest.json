@@ -1,0 +1,91 @@
+{
+  "format": "meo-specialist-numpy-v1",
+  "sourceArchive": "MEO_Project_runnable.zip",
+  "sourceActorSha256": "cb1af9f4a09adb9aaaabafdb68dbe6fe8f3b6984568eb9dc0f17907c327d7329",
+  "sourcePhysicalConfigSha256": "0fa1b2c753ec83dedf3c3332e69e9929089d66a3e5b0be8838114f571c350e0c",
+  "architecture": {
+    "nodeDim": 20,
+    "edgeDim": 6,
+    "hiddenDim": 128,
+    "messageDim": 64,
+    "layers": 2,
+    "lanes": 7,
+    "models": 5,
+    "neighborSlots": 12,
+    "attention": false,
+    "hierarchical": true,
+    "preferenceDim": 2
+  },
+  "modelProfiles": [
+    {
+      "id": "M1",
+      "name": "TinyCNN",
+      "computeGcyc": 0.05,
+      "memoryMb": 4.0,
+      "parametersMillion": 0.05,
+      "synthetic": true
+    },
+    {
+      "id": "M2",
+      "name": "BCResNet",
+      "computeGcyc": 0.12,
+      "memoryMb": 8.0,
+      "parametersMillion": 0.12,
+      "synthetic": true
+    },
+    {
+      "id": "M3",
+      "name": "CRNN",
+      "computeGcyc": 0.45,
+      "memoryMb": 24.0,
+      "parametersMillion": 1.5,
+      "synthetic": true
+    },
+    {
+      "id": "M4",
+      "name": "TCN",
+      "computeGcyc": 0.8,
+      "memoryMb": 40.0,
+      "parametersMillion": 2.7,
+      "synthetic": true
+    },
+    {
+      "id": "M5",
+      "name": "AST",
+      "computeGcyc": 1.8,
+      "memoryMb": 90.0,
+      "parametersMillion": 5.0,
+      "synthetic": true
+    }
+  ],
+  "specialists": {
+    "completion": {
+      "asset": "completion.npz",
+      "assetSha256": "02c437c5f619f28aacae3f26f488cbd21d99b08944076b4893b498cb3a4ea098",
+      "checkpointSha256": "556aac9ded755dd3a01a276384495658691cec07345649166208952b3bc91cab",
+      "sourceCheckpoint": "outputs/spec_w000/checkpoints/best_model.pt",
+      "preference": [
+        0,
+        1
+      ],
+      "seed": 42
+    },
+    "accuracy": {
+      "asset": "accuracy.npz",
+      "assetSha256": "b55e16099cdddbae8ba1ce9ee6db08abe79ca92c46f0db4733cf7b7be8969aea",
+      "checkpointSha256": "e12cbbec9e16f7bcccddc4566de416d1e30c6077410d32c43d0ba386cdf3311c",
+      "sourceCheckpoint": "outputs/spec_w100/checkpoints/best_model.pt",
+      "preference": [
+        1,
+        0
+      ],
+      "seed": 42
+    }
+  },
+  "limits": [
+    "The two supplied specialist checkpoints are used as separate policies.",
+    "No conditional-policy student checkpoint was supplied or synthesized.",
+    "Model profiles and SUMO task inputs are synthetic, not acoustic inference.",
+    "Transfer from training graph to this SUMO graph requires new evaluation."
+  ]
+}

@@ -11,7 +11,7 @@
 | 声学分类、方位、定位 | `PerceptionProvider` / `PerceptionResult` | 为标签、置信度、方位角、SUMO 平面坐标、不确定度预留明确字段；默认不编造模型结果 |
 | 算力估计 | `ComputeProvider.estimate_seconds()` | 默认 `SyntheticCompute` 使用配置服务时长乘固定种子的工作量系数；未测量设备性能 |
 | 上行、回传时延 | `TransportProvider.estimate_seconds()` | 默认 `SyntheticTransport` 使用本地/跨站距离公式；真实链路测量可替换此估计器 |
-| 调度决策 | `SchedulerProvider.select()` | 默认 `LeastFinishScheduler` 支持最早完成与纯本地；已有预留不被后续任务改变 |
+| 调度决策 | `SchedulerProvider.select()` | 默认 `MeoScheduler` 使用两份训练专家之一；最早完成与纯本地作为对照保留，见 `MEO_SCHEDULER.md` |
 | 模型执行、远程 RSU 服务 | `HttpAcousticProvider` + `ModelGateway` | 后台 HTTP 推理，可通过显式音频引用试接独立服务；不阻塞 SUMO 步进 |
 | 仿真信控 | `BoundedGreenPolicy` + `TraCISignalActuator` | 结果返回后、匹配当前绿灯、无黄灯、每绿相位一次、总绿灯最长 55 秒；仅作用于本地 SUMO |
 | 真实信号机 | `SignalActuator` + `DisabledPhysicalSignalActuator` | 明确拒绝发出设备指令；未来接入时需要真实设备协议、鉴权和独立安全验证 |

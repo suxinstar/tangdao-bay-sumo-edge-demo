@@ -1,6 +1,8 @@
 [
   [
     "C:\\Users\\suchengxin\\Documents\\New project\\outputs\\TangdaoBay_3D_Demo_Delivery_20261001\\_runtime\\sumo-1.25.0\\bin\\netconvert.EXE",
+    "--node-files",
+    "data/synthetic-signals.nod.xml",
     "--osm-files",
     "data/tangdao.osm.xml",
     "--output-file",

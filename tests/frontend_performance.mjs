@@ -38,5 +38,5 @@ check('hidden_cancels_frames_and_poll_guard',"document.hidden=true;visibilityCha
 assert.equal(timers.size,0);assert.equal(rafs.size,0);checks.push('hidden_has_zero_frame_timers');
 check('dispose_releases_scene_resources',"let count=0;world.traverse(o=>{if(o.geometry)o.geometry.addEventListener('dispose',()=>count++)});disposeScene();assert(count>20);assert.equal(effects.size,0);assert.equal(effectPool.length,0);assert.equal(stopped,true);");
 const report={passed:true,checks:checks.length,details:checks,scope:'Actual frontend functions and Three.js geometry in Node VM; mocked DOM/timers/renderer. Not a GPU or browser benchmark.',fixture:{vehicles:state.vehicles.length,tasks:state.tasks.length,signals:state.signals.length}};
-fs.writeFileSync(path.join(root,'evidence/performance/frontend_checks.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
+fs.writeFileSync(path.join(root,'evidence/v1_5_20261008/frontend_checks.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
 

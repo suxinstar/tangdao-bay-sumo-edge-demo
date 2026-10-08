@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "verifiedAtUtc": "2026-10-08T11:01:04.904049+00:00",
+  "reviewer": "independent meo_audit agent",
+  "passed": true,
+  "scope": "Source and inference integration review, portable runtime startup boundary, drop lifecycle and independent Torch versus NumPy parity using current map-derived observations. Not a claim of scheduling superiority, acoustic recognition accuracy or original offline benchmark reproduction.",
+  "inputSha256": {
+    "integration/meo_policy.py": "2dfa40d070626513b2e11f50d31e4bf2e294f292c7b5eef0e42e6d71b5cc17e1",
+    "models/meo/manifest.json": "673f3c1837ba29781af21444cf8cc679f74b092a9e30a8f8dfd892dc1a8bbd6f",
+    "models/meo/completion.npz": "02c437c5f619f28aacae3f26f488cbd21d99b08944076b4893b498cb3a4ea098",
+    "models/meo/accuracy.npz": "b55e16099cdddbae8ba1ce9ee6db08abe79ca92c46f0db4733cf7b7be8969aea",
+    "data/scene.json": "400aaa17c22db54c18e64f85ba219cdde50e68620b47bd8d33871c691d6e75e4",
+    "simulation.py": "4c1afe5b55cf599c33f49da344d29fd28047fd32b69c32d5f7796038cd58efe2",
+    "tests/test_meo_lifecycle.py": "0f8660baf26d56854be23fa476abe65c83c5e6e6a3b468fd85f250616c78f8ee",
+    "Setup_Runtime.ps1": "b137b35569f96abc5b4c301a01abdf50664635b14e5f3adf424da1a3ddc860ea",
+    "web/app.js": "a3b4e2b320a9a6fed33149b24d118dcd5412ab931030061d2cab0f6d64a864fd",
+    "scripts/export_meo_policy.py": "ca37ed4c58c0cf5dbb9e186a458b8a701f31962710e74cb3925e7bee1ff9dde8"
+  },
+  "suppliedArchiveSourceSha256": {
+    "algos/mappo/actor_critic.py": "cb1af9f4a09adb9aaaabafdb68dbe6fe8f3b6984568eb9dc0f17907c327d7329",
+    "outputs/spec_w000/checkpoints/best_model.pt": "556aac9ded755dd3a01a276384495658691cec07345649166208952b3bc91cab",
+    "outputs/spec_w100/checkpoints/best_model.pt": "e12cbbec9e16f7bcccddc4566de416d1e30c6077410d32c43d0ba386cdf3311c"
+  },
+  "parity": {
+    "torchVersion": "2.6.0+cpu",
+    "numpyVersion": "1.26.4",
+    "loadMethod": "torch.load(map_location=cpu, weights_only=True)",
+    "modelSource": "audited original actor module in supplied archive",
+    "scenario": "Current nine RSU scene; all origins; lane channels 0,3,6; queue pressure levels 0,5,50; simulation time30; valid observed incoming lanes; raw head outputs checked before mode gating",
+    "graphsPerSpecialist": 81,
+    "totalHeadArgmaxComparisons": 40824,
+    "results": [
+      {
+        "variant": "completion",
+        "realSceneGraphs": 81,
+        "headArgmaxComparisons": 20412,
+        "argmaxMismatches": 0,
+        "maximumAbsoluteLogitDifference": 8.344650268554688e-06,
+        "totalInflowFeatureCount": 729
+      },
+      {
+        "variant": "accuracy",
+        "realSceneGraphs": 81,
+        "headArgmaxComparisons": 20412,
+        "argmaxMismatches": 0,
+        "maximumAbsoluteLogitDifference": 7.152557373046875e-06,
+        "totalInflowFeatureCount": 729
+      }
+    ]
+  },
+  "lifecycleTests": {
+    "file": "tests/test_meo_lifecycle.py",
+    "testsPassed": 9,
+    "execution": "python -m unittest discover -s tests -p test_meo_lifecycle.py -v",
+    "executedBeforeParityReplay": true,
+    "coverage": [
+      "Exact learned target retained despite worse finish time",
+      "Profile factor affects reserved service duration",
+      "Invalid mode target factor and resource estimates preserve reservations",
+      "Drop skips resource estimates queue return completion and signal",
+      "No-neighbor offload is recorded as rejected",
+      "Snapshot skipped terminal stages",
+      "Separate dropped pending and completed accounting"
+    ]
+  },
+  "resolvedFindings": [
+    "Caught missing NumPy native command errors in Windows PowerShell5 before dependency fallback",
+    "Marked dropped snapshot signal stage skipped",
+    "Handled offload without valid neighbor as explicit rejection",
+    "Mapped live inflow from actual scene incomingLaneIds",
+    "Aligned scheduler module import with integration.meo_policy"
+  ],
+  "sourceReview": [
+    "Graph encoder zero-edge bias aggregation preserved for checkpoint parity",
+    "FiLM, pre-FiLM neighbor latent, shared model heads, model temperature and prior preserved",
+    "Valid-neighbor masking and deterministic argmax retained; no heuristic action replacement",
+    "Developer exporter uses patched Torch and weights_only=True after source audit; deployment NPZ uses allow_pickle=False and pinned hashes",
+    "Thread limits are process environment settings, without global pip or registry modifications"
+  ],
+  "publicationScope": "Raw training CSV, source archive paper and original PT checkpoints remain in ignored qa; deployable actor NPZ and manifest are project assets.",
+  "limitations": [
+    "Task observations and serial worker resource model are explicit SUMO adapters; original one-second global admission environment is not reproduced",
+    "Both trained specialists may choose only offload in this scene; tests do not force action diversity",
+    "No real acoustic classification weights or measured microphone data are present",
+    "Performance parity checks are CPU inference checks, not browser GPU or physical audio tests"
+  ]
+}

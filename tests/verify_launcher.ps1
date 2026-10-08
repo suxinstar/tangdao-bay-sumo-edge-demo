@@ -26,7 +26,7 @@ try {
         [void][Management.Automation.Language.Parser]::ParseFile((Join-Path $project $name), [ref]$tokens, [ref]$parseErrors)
         Check "PowerShell syntax: $name" ($parseErrors.Count -eq 0)
     }
-    foreach ($name in @('python', 'sumo')) {
+    foreach ($name in @('python', 'sumo', 'numpy')) {
         $dependency = $manifest.$name
         $cacheFile = Join-Path $project ('_runtime\downloads\' + $dependency.archive)
         if (Test-Path -LiteralPath $cacheFile) {
@@ -34,11 +34,11 @@ try {
         }
     }
     New-Item -ItemType Directory -Path $relocated -Force | Out-Null
-    foreach ($name in @('Start_Demo.ps1', 'Setup_Runtime.ps1', 'Stop_Demo.ps1', 'runtime-manifest.json', 'server.py', 'simulation.py', 'scenario', 'data', 'web')) {
+    foreach ($name in @('Start_Demo.ps1', 'Setup_Runtime.ps1', 'Stop_Demo.ps1', 'runtime-manifest.json', 'server.py', 'simulation.py', 'integration', 'models', 'scenario', 'data', 'web')) {
         Copy-Item -LiteralPath (Join-Path $project $name) -Destination $relocated -Recurse
     }
     New-Item -ItemType Directory -Path (Join-Path $relocated '_runtime') -Force | Out-Null
-    foreach ($dependency in @($manifest.python, $manifest.sumo)) {
+    foreach ($dependency in @($manifest.python, $manifest.sumo, $manifest.numpy)) {
         Copy-Item -LiteralPath (Join-Path $project ('_runtime\' + $dependency.directory)) -Destination (Join-Path $relocated '_runtime') -Recurse
     }
     Launch $relocated -Prepare
@@ -47,7 +47,7 @@ try {
     $runtime = Get-Content -LiteralPath (Join-Path $relocated 'runs\runtime.json') -Raw | ConvertFrom-Json
     Check 'PortableOnly ignores system Python and SUMO' ($runtime.portablePython -and $runtime.portableSumo)
     $pth = Get-Content -LiteralPath (Join-Path $relocated ('_runtime\' + $manifest.python.directory + '\python312._pth'))
-    Check 'Embedded Python paths are relative' (($pth -join '|') -eq 'python312.zip|.|..\..')
+    Check 'Embedded Python paths are relative' (($pth -join '|') -eq ('python312.zip|.|..\..|..\' + $manifest.numpy.directory))
     Check 'Python and SUMO licenses retained' ((Test-Path -LiteralPath (Join-Path $relocated ('_runtime\' + $manifest.python.directory + '\LICENSE.txt'))) -and
         (Test-Path -LiteralPath (Join-Path $relocated ('_runtime\' + $manifest.sumo.directory + '\LICENSE'))) -and
         (Test-Path -LiteralPath (Join-Path $relocated ('_runtime\' + $manifest.sumo.directory + '\NOTICE.md'))) -and
@@ -58,6 +58,9 @@ try {
     $health = Invoke-RestMethod -Uri "$base/api/health" -TimeoutSec 3
     Check 'Relocated Unicode and spaced path starts real SUMO' ($health.ready -and $health.backend -eq 'SUMO/TraCI' -and $health.root -eq $relocated) @{sumo=$health.sumo;port=$service.port}
     Check 'Initial state is paused' ($health.status -eq 'paused')
+    $integration = Invoke-RestMethod -Uri "$base/api/integration" -TimeoutSec 3
+    $initial = Invoke-RestMethod -Uri "$base/api/state" -TimeoutSec 3
+    Check 'Default learned MEO policy loaded' ($initial.scheduler -eq 'meo_completion' -and $integration.scheduler.provider -eq 'MeoScheduler')
     Launch $relocated
     $same = Invoke-RestMethod -Uri "$base/api/health" -TimeoutSec 3
     Check 'Repeated launch reuses this project service' ($same.pid -eq $health.pid)
@@ -97,7 +100,7 @@ try {
         $afterOriginal = Invoke-RestMethod -Uri 'http://127.0.0.1:8765/api/health' -TimeoutSec 3
         Check 'Original port 8765 service was not replaced or stopped' ($afterOriginal.pid -eq $originalHealth.pid -and $afterOriginal.root -eq $originalHealth.root)
     }
-    $evidence = Join-Path $project 'evidence\delivery'
+    $evidence = Join-Path $project 'evidence\v1_5_20261008'
     New-Item -ItemType Directory -Path $evidence -Force | Out-Null
     [pscustomobject]@{
         schemaVersion=1;created=(Get-Date).ToString('o');passed=$true;checks=$results

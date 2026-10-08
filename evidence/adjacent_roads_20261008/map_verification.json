@@ -1,0 +1,185 @@
+{
+  "checkedAt": "2026-10-08T10:59:13.748934+00:00",
+  "method": "Real netconvert + 600 simulated seconds in SUMO 1.25; static input integrity and route/controller regression checks",
+  "previousLocalCommit": "eff7031",
+  "previousSceneSha256": "4ba5a1908fcd950e58fdf533d78f75557c7aa87b7814f7e94136d8f0a32abc81",
+  "corridorDistanceComparison": [
+    {
+      "crossRoad": "井冈山路",
+      "coastalJunctionXY": [
+        897.26,
+        511.48
+      ],
+      "previousNorthernJunctionXY": [
+        410.01,
+        1471.12
+      ],
+      "adjacentNorthernJunctionXY": [
+        604.45,
+        1082.79
+      ],
+      "previousCenterDistanceM": 1076.25,
+      "currentCenterDistanceM": 641.98,
+      "reductionPercent": 40.35
+    },
+    {
+      "crossRoad": "武夷山路",
+      "coastalJunctionXY": [
+        1188.15,
+        641.18
+      ],
+      "previousNorthernJunctionXY": [
+        851.39,
+        1683.92
+      ],
+      "adjacentNorthernJunctionXY": [
+        987.51,
+        1259.89
+      ],
+      "previousCenterDistanceM": 1095.77,
+      "currentCenterDistanceM": 650.43,
+      "reductionPercent": 40.64
+    },
+    {
+      "crossRoad": "阿里山路",
+      "coastalJunctionXY": [
+        1398.76,
+        726.6
+      ],
+      "previousNorthernJunctionXY": [
+        1096.66,
+        1798.26
+      ],
+      "adjacentNorthernJunctionXY": [
+        1223.97,
+        1326.63
+      ],
+      "previousCenterDistanceM": 1113.43,
+      "currentCenterDistanceM": 624.97,
+      "reductionPercent": 43.87
+    }
+  ],
+  "meanPreviousDistanceM": 1095.15,
+  "meanCurrentDistanceM": 639.13,
+  "meanDistanceReductionPercent": 41.64,
+  "currentCorridors": {
+    "corridors": [
+      "漓江西路",
+      "珠江路"
+    ],
+    "selectedIntersections": 9,
+    "syntheticSignalCount": 5,
+    "adjacentCorridorDistances": [
+      {
+        "crossRoad": "井冈山路",
+        "from": "漓江西路 × 井冈山路",
+        "to": "珠江路 × 井冈山路",
+        "junctionCenterDistanceM": 641.98
+      },
+      {
+        "crossRoad": "武夷山路",
+        "from": "漓江西路 × 武夷山路",
+        "to": "珠江路 × 武夷山路",
+        "junctionCenterDistanceM": 650.43
+      },
+      {
+        "crossRoad": "阿里山路",
+        "from": "漓江西路 × 阿里山路",
+        "to": "珠江路 × 阿里山路",
+        "junctionCenterDistanceM": 624.97
+      }
+    ],
+    "coverage": "Two adjacent real parallel roads: Lijiang West Road and Zhujiang Road, connected by Lushan/Jinggangshan/Wuyishan/Alishan roads",
+    "selectionStrategy": "Four existing OSM-tagged coastal signals and five explicitly synthetic SUMO signals at real adjacent Zhujiang Road intersections"
+  },
+  "sumoVerification": {
+    "ranToTime": "599.80",
+    "lastSummary": {
+      "time": "599.80",
+      "loaded": "280",
+      "inserted": "280",
+      "running": "96",
+      "waiting": "0",
+      "ended": "184",
+      "arrived": "184",
+      "collisions": "0",
+      "teleports": "0",
+      "halting": "8",
+      "stopped": "0",
+      "meanWaitingTime": "0.01",
+      "meanTravelTime": "206.27",
+      "meanSpeed": "13.69",
+      "meanSpeedRelative": "0.50",
+      "discarded": "0",
+      "duration": "0"
+    },
+    "completedTrips": 184,
+    "maxRunningVehicles": 110,
+    "collisionWarnings": 0,
+    "teleportWarnings": 0,
+    "actualIntersectionApproaches": {
+      "RSU_1": {
+        "sampledVehicleSeconds": 4819.07,
+        "approachEdgeExits": 128
+      },
+      "RSU_2": {
+        "sampledVehicleSeconds": 6077.4,
+        "approachEdgeExits": 127
+      },
+      "RSU_3": {
+        "sampledVehicleSeconds": 2911.36,
+        "approachEdgeExits": 145
+      },
+      "RSU_4": {
+        "sampledVehicleSeconds": 7238.94,
+        "approachEdgeExits": 165
+      },
+      "RSU_5": {
+        "sampledVehicleSeconds": 2681.43,
+        "approachEdgeExits": 98
+      },
+      "RSU_6": {
+        "sampledVehicleSeconds": 2203.75,
+        "approachEdgeExits": 92
+      },
+      "RSU_7": {
+        "sampledVehicleSeconds": 2064.79,
+        "approachEdgeExits": 75
+      },
+      "RSU_8": {
+        "sampledVehicleSeconds": 4714.49,
+        "approachEdgeExits": 130
+      },
+      "RSU_9": {
+        "sampledVehicleSeconds": 4719.91,
+        "approachEdgeExits": 137
+      }
+    }
+  },
+  "testResult": {
+    "command": "python -B -m unittest discover -s tests -p test_adjacent_roads.py -v",
+    "exitCode": 0,
+    "output": "test_actual_sumo_run_reached_all_nine_without_collisions_or_teleports (test_adjacent_roads.AdjacentRoadsTests.test_actual_sumo_run_reached_all_nine_without_collisions_or_teleports) ... ok\ntest_all_routes_are_connected_and_cross_corridor_flows_use_both_roads (test_adjacent_roads.AdjacentRoadsTests.test_all_routes_are_connected_and_cross_corridor_flows_use_both_roads) ... ok\ntest_every_selected_signal_is_crossed_by_a_route (test_adjacent_roads.AdjacentRoadsTests.test_every_selected_signal_is_crossed_by_a_route) ... ok\ntest_matching_crossroads_are_under_700_metres_apart (test_adjacent_roads.AdjacentRoadsTests.test_matching_crossroads_are_under_700_metres_apart) ... ok\ntest_signal_provenance_and_controller_mapping (test_adjacent_roads.AdjacentRoadsTests.test_signal_provenance_and_controller_mapping) ... ok\ntest_source_osm_is_preserved_and_patches_only_existing_nodes (test_adjacent_roads.AdjacentRoadsTests.test_source_osm_is_preserved_and_patches_only_existing_nodes) ... ok\ntest_station_numbering_is_two_nearby_real_roads (test_adjacent_roads.AdjacentRoadsTests.test_station_numbering_is_two_nearby_real_roads) ... ok\n\n----------------------------------------------------------------------\nRan 7 tests in 0.052s\n\nOK\n"
+  },
+  "inputSha256": {
+    "scripts/build_map.py": "9173240724f0d42e2f87b25b5a33d210de7b8388235046b3421e01e7458bcf10",
+    "tests/test_adjacent_roads.py": "6231a6d82cc1105274df8fc4555eb44b52f21f2d7573846d0705d3912c0a2c31",
+    "MAP_NOTES.md": "16c5dc6c4e89ea9f80ea1782d5924285911c0bfdb06dc17e444d07d69084c82c",
+    "data/tangdao.osm.xml": "7d008dd5adab60d4811444d9c331886782751e8431d813ba450227286f42754a",
+    "data/scene.json": "400aaa17c22db54c18e64f85ba219cdde50e68620b47bd8d33871c691d6e75e4",
+    "data/synthetic-signals.nod.xml": "d3c6983aa1aa05afdc04a3ec863bd8f509b4c131630b7fc50465f15a68a7f31c",
+    "data/build_stats.json": "7fbfbef23c1dc175858961ba4b13d86194cca33f8fdc0e911ba5499310773e91",
+    "data/map_preview.svg": "72538f40cb66af1544fd2684eb4a673bf1efb45949ff9fcb6d970186a80cc2e8",
+    "data/map_preview.png": "4340d08fb1ed48269bfb60ffa6ca5b91666268cc0b26fa2f066349af2aeeae49",
+    "data/traffic_manifest.json": "66298e91fd90dc0c3479b07cf5d1ce9a77434d7c47fe342a823afb564dc3a49a",
+    "scenario/tangdao.net.xml": "f51f9327c5e9c1996470f050d297de62cf715faa10f6c6ec0a8f25c271435557",
+    "scenario/traffic.rou.xml": "3c2c474c595cbb42d38759672d0b158e172dc6aecc5a884d0051720e1e6b63bb",
+    "scenario/tangdao.sumocfg": "03131881e10df3e6520b753d45840b4cda63d6ce809070b6904144089ace2af9"
+  },
+  "limitations": [
+    "Zhujiang Road traffic lights and every RSU are synthetic demonstration infrastructure on authentic OSM geometry.",
+    "Distances are local projected intersection-center straight-line distances, not road travel distance or measured radio reach.",
+    "Traffic demands differ from v1.4, so lower vehicle counts are not scheduler or renderer performance gains.",
+    "SVG/PNG are generated map-data previews, not browser screenshots."
+  ]
+}

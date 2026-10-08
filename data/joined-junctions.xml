@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 2026-10-08T15:56:13.252485+08:00 by Eclipse SUMO netconvert 1.25.0
+<!-- generated on 2026-10-08T18:57:13.369933+08:00 by Eclipse SUMO netconvert 1.25.0
 <netconvertConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
 
     <input>
+        <node-files value="data/synthetic-signals.nod.xml"/>
         <osm-files value="data/tangdao.osm.xml"/>
     </input>
 
@@ -46,6 +47,11 @@
 -->
 
 <nodes version="1.20" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/nodes_file.xsd">
+    <join nodes="3265502515 4249906632"/>
+    <join nodes="1548278295 4249906635 4249906636 4249906637"/>
+    <join nodes="1548278338 4249906642"/>
+    <join nodes="1548278337 4249906644 6902632405 6902632858"/>
+    <join nodes="13958144640 13958144648"/>
     <join nodes="13371353921 5431318558"/>
     <join nodes="13371353937 13371353938"/>
     <join nodes="13375307666 3685215018"/>
@@ -56,9 +62,7 @@
     <join nodes="3685211412 4461902623 6902632341 6902632415"/>
     <join nodes="3265502553 4461902390 6902626159 6902632526"/>
     <join nodes="1517777550 4249906651 4491195657 4491195658"/>
-    <join nodes="1548278295 4249906637"/>
     <join nodes="1548278298 4249906655"/>
-    <join nodes="1548278337 6902632858"/>
     <join nodes="3265502528 4491195660"/>
     <join nodes="3265502529 4491195654 6902632310 941471471"/>
     <join nodes="3265502958 4491195634"/>
@@ -68,8 +72,6 @@
     <join nodes="3685215191 4491195633"/>
     <join nodes="3685215201 5431318010"/>
     <join nodes="3685215213 4491195636"/>
-    <join nodes="4249906635 4249906636"/>
-    <join nodes="4249906644 6902632405"/>
     <join nodes="5431318550 8946647192"/>
     <join nodes="5431318557 6902632319"/>
     <join nodes="8946647194 8946647196"/>

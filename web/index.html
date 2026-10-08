@@ -37,7 +37,7 @@
         <div class="section-heading"><h2><span class="section-index">01</span>运行控制</h2><span id="run-state" class="state-badge">准备中</span></div>
         <div class="clock-row"><span>仿真时间</span><strong id="sim-clock">00:00.0</strong><small id="sim-seconds">0.0 s</small></div>
         <div class="control-row"><button id="play-button" class="primary-button" disabled>Ⅱ 暂停</button><button id="reset-button" class="secondary-button" disabled title="以相同随机种子重新开始">↺ 重置</button><select id="speed-select" aria-label="仿真速度"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></div>
-        <label class="algorithm-label" for="scheduler-select">任务调度策略 <span>切换后重新开始</span></label><select id="scheduler-select"><option value="least_finish">最早完成 · 允许跨 RSU</option><option value="local">本地执行 · 不卸载</option></select><p class="control-note" id="control-note">时间、任务和信号均来自本地仿真。</p>
+        <label class="algorithm-label" for="scheduler-select">任务调度策略 <span>切换后重新开始</span></label><select id="scheduler-select"><option value="meo_completion">MEO · 完成率偏好（训练权重）</option><option value="meo_accuracy">MEO · 精度偏好（训练权重）</option><option value="least_finish">最早完成 · 允许跨 RSU</option><option value="local">本地执行 · 不卸载</option></select><p class="control-note" id="control-note">时间、任务和信号均来自本地仿真。</p>
       </section>
       <section class="vehicle-section" aria-label="单车跟随与任务过程">
         <div class="section-heading"><h2><span class="section-index">02</span>单车跟随</h2><span class="section-code">VEHICLE LINK</span></div>

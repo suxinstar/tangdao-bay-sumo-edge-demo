@@ -25,9 +25,16 @@ function Test-DemoSumo([string]$Path) {
     } catch { return $false }
 }
 
+function Test-DemoNumpy([string]$Path) {
+    try {
+        & $Path -c 'import numpy; assert numpy.__version__' 2>$null | Out-Null
+        return $LASTEXITCODE -eq 0
+    } catch { return $false }
+}
+
 function Get-VerifiedArchive($Dependency) {
     $uri = [uri]$Dependency.url
-    if ($uri.Scheme -ne 'https' -or $uri.Host -notin @('www.python.org', 'sumo.dlr.de')) {
+    if ($uri.Scheme -ne 'https' -or $uri.Host -notin @('www.python.org', 'sumo.dlr.de', 'files.pythonhosted.org')) {
         throw 'Runtime download URL must be an approved official HTTPS URL.'
     }
     $cache = Join-Path $runtimeRoot 'downloads'
@@ -139,6 +146,19 @@ if (!$sumoRoot) {
     if (!(Test-DemoSumo $portableSumo)) { $portableSumo = Install-PortableDependency $manifest.sumo -IsSumo }
     $sumoRoot = $portableSumo
     if (!(Test-DemoSumo $sumoRoot)) { throw 'Portable SUMO did not start. See README troubleshooting and check antivirus quarantine.' }
+}
+# The learned scheduler needs NumPy. Preserve external Python installations;
+# if NumPy is missing, prepare our portable interpreter instead of global pip.
+if (!(Test-DemoNumpy $pythonExe) -or $pythonExe -eq $portablePython) {
+    if (!(Test-DemoPython $portablePython)) { $portablePythonRoot = Install-PortableDependency $manifest.python }
+    $numpyRoot = Join-Path $runtimeRoot $manifest.numpy.directory
+    if (!(Test-Path -LiteralPath (Join-Path $numpyRoot 'numpy\__init__.py'))) {
+        $numpyRoot = Install-PortableDependency $manifest.numpy
+    }
+    @('python312.zip', '.', '..\..', ('..\' + $manifest.numpy.directory)) |
+        Set-Content -LiteralPath (Join-Path $portablePythonRoot 'python312._pth') -Encoding ASCII
+    $pythonExe = $portablePython
+    if (!(Test-DemoNumpy $pythonExe)) { throw 'Portable NumPy did not start. See _runtime and retry Setup_Runtime.ps1.' }
 }
 $pythonVersion = (& $pythonExe -c "import sys; print('.'.join(map(str, sys.version_info[:3])))" | Out-String).Trim()
 Write-Host "Python $pythonVersion : $pythonExe"

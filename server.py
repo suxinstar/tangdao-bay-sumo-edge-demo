@@ -123,7 +123,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--host', choices=['127.0.0.1', 'localhost'], default='127.0.0.1')
     parser.add_argument('--port', type=int, default=8765)
-    parser.add_argument('--scheduler', choices=['least_finish', 'local'], default='least_finish')
+    parser.add_argument('--scheduler', choices=['meo_completion', 'meo_accuracy', 'least_finish', 'local'], default='meo_completion')
     parser.add_argument('--speed', type=float, choices=[0.5, 1, 2, 4], default=1)
     parser.add_argument('--service-time', type=float, default=None, help='synthetic demo seconds, not measured device time')
     parser.add_argument('--max-time', type=float, default=900)
